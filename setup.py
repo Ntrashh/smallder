@@ -8,7 +8,7 @@ _version_re = re.compile(r"__version__\s+=\s+(.*)")
 
 def read_version():
     regexp = re.compile(r'^__version__\W*=\W*"([\d.abrc]+)"')
-    init_py = os.path.join(os.path.dirname(__file__), "smaller", "__init__.py")
+    init_py = os.path.join(os.path.dirname(__file__), "smallder", "__init__.py")
     with open(init_py) as f:
         for line in f:
             match = regexp.match(line)
