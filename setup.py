@@ -33,6 +33,7 @@ requires = [
     'fastapi',
     "requests",
     "pydispatch",
+    "PyDispatcher",
     'h11',
     'idna',
     'loguru',
