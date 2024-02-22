@@ -32,6 +32,7 @@ requires = [
     'exceptiongroup',
     'fastapi',
     "requests",
+    "pydispatch",
     'h11',
     'idna',
     'loguru',
