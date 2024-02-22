@@ -1,0 +1,166 @@
+import os
+import time
+import traceback
+from concurrent.futures import ThreadPoolExecutor
+from smallder.api.app import FastAPIWrapper
+from smallder.core.customsignalmanager import CustomSignalManager
+from smallder.core.download import Download
+from smallder.core.item import Item
+from smallder.core.middleware import MiddlewareManager
+from smallder.core.scheduler import SchedulerFactory
+from smallder.core.statscollectors import MemoryStatsCollector
+
+
+class Engine:
+    stats = MemoryStatsCollector()
+    signal_manager = CustomSignalManager()
+    fastapi_manager = FastAPIWrapper()
+    futures = []
+
+    def __init__(self, spider, **kwargs):
+        self.spider = spider(**kwargs)
+        self.download = Download(self.spider)
+        self.middleware_manager = MiddlewareManager(spider)
+        self.start_requests = iter(self.spider.start_request())
+        self.setup_signals()
+        self.spider.setup_redis()
+        self.scheduler = SchedulerFactory.create_scheduler(self.spider)
+        self.default_thread_count = self.spider.thread_count if self.spider.thread_count else os.cpu_count() * 2
+
+
+
+    def setup_signals(self):
+        # 在这里注册爬虫开始和结束的信号
+        self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
+        self.signal_manager.connect("SPIDER_STARTED", self.middleware_manager.load_middlewares)
+        if self.spider.fastapi:
+            self.signal_manager.connect("SPIDER_STARTED", self.fastapi_manager.run)
+
+    def future_done(self, future):
+        try:
+            self.futures.remove(future)
+        except ValueError as e:
+            self.spider.log.warning(e)  # Future 已经被移除
+
+    @stats.handler
+    def process_request(self, request=None):
+        try:
+            middleware_request = self.spider.download_middleware(request)
+            if middleware_request is not None:
+                request = middleware_request
+            request = self.middleware_manager.process_request(request)
+            response = self.download.download(request)
+            response = self.middleware_manager.process_response(response)
+            self.spider.log.success(response)
+            self.scheduler.add_job(response)
+        except Exception:
+            self.spider.log.error(f"website:{request.meta.get('id')}  {request.url} 请求出现错误")
+            traceback.print_exc()
+
+    @stats.handler
+    def process_response(self, response=None):
+        try:
+            callback = response.request.callback or self.spider.paser
+            _iters = callback(response)
+            if _iters is None:
+                return
+            for _iter in _iters:
+                self.scheduler.add_job(_iter, block=True)
+        except Exception as e:
+            self.spider.log.error(f"website : {response.meta.get('id')}  {response.url} 回调方法出现错误")
+            traceback.print_exc()
+
+    @stats.handler
+    def process_item(self, item=Item):
+        try:
+            self.spider.pipline(item)
+        except Exception:
+            traceback.print_exc()
+
+    def engine(self):
+        rounds = 0
+        with ThreadPoolExecutor(max_workers=self.default_thread_count) as executor:
+            end = 300 if self.spider.server else 10
+            while rounds < end:
+                try:
+                    if len(self.futures) > self.default_thread_count * 5:
+                        time.sleep(0.1)
+                        continue
+                    if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
+                        time.sleep(0.1)
+                        rounds += 1
+                    if self.start_requests is not None:
+                        try:
+                            task = next(self.start_requests)
+                            self.scheduler.add_job(task)
+                        except StopIteration:
+                            self.start_requests = None
+                        except Exception:
+                            self.start_requests = None
+                    task = self.scheduler.next_job()
+                    # self.spider.log.info(self.scheduler.size())
+                    # self.spider.log.info(self.futures)
+                    # self.spider.log.info(f"rounds:{rounds}")
+                    if task is None:
+                        time.sleep(0.01)
+                        continue
+                    process_func = self.process_func(task)
+                    future = executor.submit(process_func, task)
+                    self.futures.append(future)
+                    future.add_done_callback(self.future_done)
+                    rounds = 0
+                except Exception:
+                    traceback.print_exc()
+        self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+
+    def debug(self):
+        rounds = 0
+        while rounds < 6:
+            try:
+                if len(self.futures) > self.default_thread_count * 6:
+                    time.sleep(0.5)
+                    continue
+                if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
+                    time.sleep(0.5)
+                    rounds += 1
+                if self.start_requests is not None:
+                    try:
+                        task = next(self.start_requests)
+                        self.scheduler.add_job(task)
+                    except StopIteration:
+                        self.start_requests = None
+                    except Exception:
+                        self.start_requests = None
+                task = self.scheduler.next_job()
+                if task is None:
+                    time.sleep(0.1)
+                    continue
+                process_func = self.process_func(task)
+                process_func(task)
+                rounds = 0
+            except Exception:
+                traceback.print_exc()
+
+    def process_func(self, task):
+        cls_name = type(task).__name__
+        func_dict = {
+            "Request": self.process_request,
+            "Response": self.process_response,
+            "dict": self.process_item,
+            "Item": self.process_item,
+        }
+        func = func_dict.get(cls_name)
+        if func is None:
+            raise ValueError(f"{task} does not exist")
+        return func
+
+    def __enter__(self):
+        self.signal_manager.send("SPIDER_STARTED")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.spider.log.info(f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+        if exc_tb:
+            print(traceback.format_exc(exc_tb))
+
+        self.signal_manager.send("SPIDER_STOPPED")
