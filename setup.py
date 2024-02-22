@@ -31,6 +31,7 @@ requires = [
     'click',
     'exceptiongroup',
     'fastapi',
+    "requests",
     'h11',
     'idna',
     'loguru',
