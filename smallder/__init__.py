@@ -13,5 +13,4 @@ __all__ = [
     "Spider",
     "Request",
     "Response",
-    "Middleware"
 ]

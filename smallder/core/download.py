@@ -1,4 +1,3 @@
-# from middleware.universal import UniversalMiddleware
 from smallder import Request, Response
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from middleware import custom

@@ -1,8 +1,7 @@
 import importlib
-
 from smallder import Request
 from smallder.utils.request import fingerprint
-from utils.url import filter_url_params_corrected
+
 
 
 class Filter:

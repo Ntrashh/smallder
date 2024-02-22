@@ -1,10 +1,7 @@
 import json
 import time
-import traceback
 from typing import Any, Dict
-
 from loguru import logger
-
 from smallder.utils.utils import singleton
 
 StatsT = Dict[str, Any]
