@@ -58,4 +58,5 @@ class Spider:
     @classmethod
     def debug(cls, **kwargs):
         with Engine(cls, **kwargs) as engine:
-            engine.debug()
+            spider = engine.debug()
+            return spider

@@ -140,6 +140,7 @@ class Engine:
                 rounds = 0
             except Exception:
                 traceback.print_exc()
+        return self.spider
 
     def process_func(self, task):
         cls_name = type(task).__name__
