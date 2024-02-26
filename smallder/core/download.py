@@ -17,20 +17,23 @@ class Download:
 
     @retry(retry_count=3)
     def fetch(self, request: Request):
-        response = requests.request(
-            method=request.method,
-            url=request.url,
-            headers=request.headers,
-            params=request.params,
-            data=request.data,
-            cookies=request.cookies,
-            timeout=request.timeout,
-            proxies=request.proxies,
-            verify=False
-        )
 
-        return Response(url=request.url, status_code=response.status_code, content=response.content, request=request,
-                        cookies=response.cookies.get_dict())
+        # 假设 'request' 是一个已经定义好的请求对象，包含了必要的属性如method, url等
+        with requests.request(
+                method=request.method,
+                url=request.url,
+                headers=request.headers,
+                params=request.params,
+                data=request.data,
+                cookies=request.cookies,
+                timeout=request.timeout,
+                proxies=request.proxies,
+                verify=False
+        ) as response:
+
+            return Response(url=request.url, status_code=response.status_code, content=response.content,
+                            request=request,
+                            cookies=response.cookies.get_dict())
 
     def download(self, request: Request):
         # universal_middleware = UniversalMiddleware(self.spider)
