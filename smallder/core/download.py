@@ -15,8 +15,9 @@ class Download:
     def __init__(self, spider):
         self.spider = spider
 
+    @classmethod
     @retry(retry_count=3)
-    def fetch(self, request: Request):
+    def fetch(cls, request: Request):
 
         # 假设 'request' 是一个已经定义好的请求对象，包含了必要的属性如method, url等
         with requests.request(
@@ -28,9 +29,9 @@ class Download:
                 cookies=request.cookies,
                 timeout=request.timeout,
                 proxies=request.proxies,
-                verify=False
+                verify=False,
+                allow_redirects=False,  # 禁止重定向
         ) as response:
-
             return Response(url=request.url, status_code=response.status_code, content=response.content,
                             request=request,
                             cookies=response.cookies.get_dict())
@@ -44,7 +45,6 @@ class Download:
         # response = universal_middleware.response_before(response)
         # response = self.download_before(custom_middleware, response)
         return response
-
 
     def load_middleware(self, request: Request):
         _id = request.meta.get("id", "")
