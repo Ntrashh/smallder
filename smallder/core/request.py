@@ -17,7 +17,9 @@ class Request:
         # "encoding",
         # "priority",
         "dont_filter",
-        "referer"
+        "referer",
+        "verify",
+        "allow_redirects",
         # "errback",
         # "flags",
         # "cb_kwargs",
@@ -36,7 +38,9 @@ class Request:
             meta=None,
             referer=None,
             proxies=None,
-            dont_filter=False
+            dont_filter=False,
+            verify=False,
+            allow_redirects=False,
     ):
         self.method = "POST" if method.upper() == "POST" or data and data != "{}" else "GET"
         self.url = url
@@ -48,6 +52,8 @@ class Request:
         self.callback = callback
         self.proxies = proxies
         self.dont_filter = dont_filter
+        self.verify = verify
+        self.allow_redirects = allow_redirects
         self._meta = dict(meta) if meta else None
         self._referer = referer if referer else None
 

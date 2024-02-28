@@ -29,8 +29,8 @@ class Download:
                 cookies=request.cookies,
                 timeout=request.timeout,
                 proxies=request.proxies,
-                verify=False,
-                allow_redirects=False,  # 禁止重定向
+                verify=request.verify,
+                allow_redirects=request.allow_redirects,  # 禁止重定向
         ) as response:
             return Response(url=request.url, status_code=response.status_code, content=response.content,
                             request=request,
