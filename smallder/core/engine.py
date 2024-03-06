@@ -20,7 +20,7 @@ class Engine:
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
         self.download = Download(self.spider)
-        self.middleware_manager = MiddlewareManager(spider)
+        self.middleware_manager = MiddlewareManager(self.spider)
         self.start_requests = iter(self.spider.start_request())
         self.setup_signals()
         self.spider.setup_redis()
