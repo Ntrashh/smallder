@@ -4,7 +4,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from smallder.api.app import FastAPIWrapper
 from smallder.core.customsignalmanager import CustomSignalManager
-from smallder.core.download import Download
+from smallder.core.downloader import Downloader
 from smallder.core.item import Item
 from smallder.core.middleware import MiddlewareManager
 from smallder.core.scheduler import SchedulerFactory
@@ -19,7 +19,7 @@ class Engine:
 
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
-        self.download = Download(self.spider)
+        self.download = Downloader(self.spider)
         self.middleware_manager = MiddlewareManager(self.spider)
         self.start_requests = iter(self.spider.start_request())
         self.setup_signals()
@@ -98,9 +98,6 @@ class Engine:
                         except Exception:
                             self.start_requests = None
                     task = self.scheduler.next_job()
-                    # self.spider.log.info(self.scheduler.size())
-                    # self.spider.log.info(self.futures)
-                    # self.spider.log.info(f"rounds:{rounds}")
                     if task is None:
                         time.sleep(0.01)
                         continue
