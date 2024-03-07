@@ -3,10 +3,14 @@ from smallder import Request
 from smallder.utils.request import fingerprint
 
 
-
 class Filter:
 
     def request_seen(self, request: Request) -> bool:
+        """
+        判断请求是否存在如果存在就返回True
+        :param request:
+        :return:
+        """
         pass
 
 
@@ -35,21 +39,23 @@ class RedisFilter(Filter):
 
 class FilterFactory:
 
-    def create_filter(self, spider):
+    @classmethod
+    def create_filter(cls, spider):
         server = spider.server
         if server is None:
             _filter = MemoryFilter()
         else:
-            _filter_class = self.load_filter(spider)
+            _filter_class = cls.load_filter(spider)
             if _filter_class is not None:
                 instance = _filter_class(server)
                 return instance
-            key = f"{spider.name}:dupefilter"
+            key = f"{spider.name}:dupfilter"
             _filter = RedisFilter(server, key)
         return _filter
 
-    def load_filter(self, spider):
-        mw_path = spider.custom_settings.get("dupefilter_class","")
+    @classmethod
+    def load_filter(cls, spider):
+        mw_path = spider.custom_settings.get("dupefilter_class", "")
         try:
             module_path, class_name = mw_path.rsplit('.', 1)
             module = importlib.import_module(module_path)

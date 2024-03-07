@@ -1,16 +1,18 @@
 import _queue
+import importlib
 import json
 import queue
 import traceback
 from collections.abc import Iterable
 from smallder import Request
-from smallder.core.dupefilter import Filter, FilterFactory
+from smallder.core.dupfilter import Filter, FilterFactory
 
 
 class Scheduler:
     queue = queue.Queue()
 
-    def __init__(self, dupe_filter: Filter):
+    def __init__(self, spider, dupe_filter: Filter):
+        self.spider = spider
         self.dupe_filter = dupe_filter
 
     def next_job(self, block=False):
@@ -26,9 +28,14 @@ class Scheduler:
         pass
 
     def filter_request(self, job):
+        """
+        过滤任务，如果是request并且需要去重就进行过滤
+        :param job:
+        :return:
+        """
         if isinstance(job, Request) and not job.dont_filter:
-            return self.dupe_filter.request_seen(job)
-        return False
+            return not self.dupe_filter.request_seen(job)
+        return True
 
 
 class MemoryScheduler(Scheduler):
@@ -56,10 +63,9 @@ class MemoryScheduler(Scheduler):
 class RedisScheduler(Scheduler):
 
     def __init__(self, spider, dupe_filter: Filter):
-        super().__init__(dupe_filter)
+        super().__init__(spider, dupe_filter)
         self.spider = spider
         self.server = spider.server
-        # self.request_key = f"smallder:{self.spider.name}:request"
         self.request_key = f"{self.spider.redis_task_key}:request"
         self.batch_size = self.spider.batch_size or 10
 
@@ -80,7 +86,7 @@ class RedisScheduler(Scheduler):
             if self.queue.empty():
                 self.pop_redis_to_queue(self.request_key)
             job = self.queue.get(block=block)
-            if not (self.spider.skip_duplicates and self.filter_request(job)):
+            if self.filter_request(job):
                 return job
         except _queue.Empty:
             pass
@@ -142,7 +148,7 @@ class RedisStartScheduler(RedisScheduler):
             if found:
                 self.spider.log.info(f"Read {found} requests from '{self.spider.redis_task_key}'")
             job = self.queue.get_nowait()
-            if not (self.spider.skip_duplicates and self.filter_request(job)):
+            if self.filter_request(job):
                 return job
         except _queue.Empty:
             pass
@@ -173,12 +179,28 @@ class SchedulerFactory:
 
     @classmethod
     def create_scheduler(cls, spider):
-        dup_filter = FilterFactory().create_filter(spider)
+
+        dup_filter = FilterFactory.create_filter(spider)
         if spider.server is None:
-            scheduler = MemoryScheduler(dup_filter)
+            scheduler = MemoryScheduler(spider, dup_filter)
         else:
+            _scheduler_cls = cls.load_filter(spider)
+            if _scheduler_cls is not None:
+                instance = _scheduler_cls(spider, dup_filter)
+                return instance
             if spider.redis_task_key:
                 scheduler = RedisStartScheduler(spider, dup_filter)
             else:
                 scheduler = RedisScheduler(spider, dup_filter)
         return scheduler
+
+    @classmethod
+    def load_filter(cls, spider):
+        mw_path = spider.custom_settings.get("scheduler_class", "")
+        try:
+            module_path, class_name = mw_path.rsplit('.', 1)
+            module = importlib.import_module(module_path)
+            return getattr(module, class_name)
+        except (ImportError, AttributeError) as e:
+            spider.log.error(f"Failed to load middleware class {mw_path}: {e}")
+            return None
