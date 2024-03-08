@@ -53,9 +53,9 @@ class Engine:
             response = self.middleware_manager.process_response(response)
             self.spider.log.success(response)
             self.scheduler.add_job(response)
-        except Exception:
-            self.spider.log.error(f"website:{request.meta.get('id')}  {request.url} 请求出现错误")
-            traceback.print_exc()
+        except Exception as e:
+            self.spider.log.exception(f"website:{request.meta.get('id')}  {request.url} 请求出现错误 \n {e}")
+
 
     @stats.handler
     def process_response(self, response=None):
@@ -67,15 +67,14 @@ class Engine:
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=True)
         except Exception as e:
-            self.spider.log.error(f"website : {response.meta.get('id')}  {response.url} 回调方法出现错误")
-            traceback.print_exc()
+            self.spider.log.exception(f"website : {response.meta.get('id')}  {response.url} 回调方法出现错误 \n {e}")
 
     @stats.handler
     def process_item(self, item=Item):
         try:
             self.spider.pipline(item)
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            self.spider.log.exception(f"{item} 入库出现错误 \n {e}")
 
     def engine(self):
         rounds = 0
@@ -106,8 +105,8 @@ class Engine:
                     self.futures.append(future)
                     future.add_done_callback(self.future_done)
                     rounds = 0
-                except Exception:
-                    traceback.print_exc()
+                except Exception as e:
+                    self.spider.log.exception(f"调度引擎出现错误 \n {e}")
         self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
     def debug(self):
@@ -135,8 +134,9 @@ class Engine:
                 process_func = self.process_func(task)
                 process_func(task)
                 rounds = 0
-            except Exception:
-                traceback.print_exc()
+            except Exception as e:
+                self.spider.log.exception(f"调度引擎出现错误 \n {e}")
+
         return self.spider
 
     def process_func(self, task):
@@ -159,6 +159,5 @@ class Engine:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.spider.log.info(f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
         if exc_tb:
-            print(traceback.format_exc(exc_tb))
-
+            self.spider.log.warning(traceback.format_exc(exc_tb))
         self.signal_manager.send("SPIDER_STOPPED")

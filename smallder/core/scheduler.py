@@ -90,20 +90,18 @@ class RedisScheduler(Scheduler):
                 return job
         except _queue.Empty:
             pass
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            self.spider.logger.exception(e)
 
     def add_job(self, job, block=True):
         if isinstance(job, Request):
             try:
-                # self.spider.log.info(job)
                 _str = json.dumps(job.to_dict(self.spider))
                 self.server.rpush(self.request_key, _str.encode())
             except Exception as e:
-                print(e)
+                self.spider.logger.exception(e)
         else:
             self.queue.put(job)
-        # self.queue.put(job,block=True)
 
     def pop_list_queue(self, redis_key, batch_size):
         with self.server.pipeline() as pipe:
@@ -152,8 +150,8 @@ class RedisStartScheduler(RedisScheduler):
                 return job
         except _queue.Empty:
             pass
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            self.spider.logger.exception(e)
 
     def size(self):
         if self.queue.empty():
