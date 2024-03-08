@@ -43,7 +43,7 @@ class MemoryScheduler(Scheduler):
     def next_job(self, block=False):
         try:
             job = self.queue.get(block=block)
-            if not self.filter_request(job):
+            if self.filter_request(job):
                 return job
         except _queue.Empty:
             pass
