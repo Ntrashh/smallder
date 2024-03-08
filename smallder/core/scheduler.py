@@ -91,7 +91,7 @@ class RedisScheduler(Scheduler):
         except _queue.Empty:
             pass
         except Exception as e:
-            self.spider.logger.exception(e)
+            self.spider.log.exception(e)
 
     def add_job(self, job, block=True):
         if isinstance(job, Request):
@@ -99,7 +99,7 @@ class RedisScheduler(Scheduler):
                 _str = json.dumps(job.to_dict(self.spider))
                 self.server.rpush(self.request_key, _str.encode())
             except Exception as e:
-                self.spider.logger.exception(e)
+                self.spider.log.exception(e)
         else:
             self.queue.put(job)
 
@@ -151,7 +151,7 @@ class RedisStartScheduler(RedisScheduler):
         except _queue.Empty:
             pass
         except Exception as e:
-            self.spider.logger.exception(e)
+            self.spider.log.exception(e)
 
     def size(self):
         if self.queue.empty():
