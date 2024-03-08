@@ -55,7 +55,7 @@ class FilterFactory:
 
     @classmethod
     def load_filter(cls, spider):
-        mw_path = spider.custom_settings.get("dupefilter_class", "")
+        mw_path = spider.custom_settings.get("dupfilter_class", "")
         try:
             module_path, class_name = mw_path.rsplit('.', 1)
             module = importlib.import_module(module_path)

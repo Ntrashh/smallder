@@ -11,9 +11,9 @@ from smallder.core.dupfilter import Filter, FilterFactory
 class Scheduler:
     queue = queue.Queue()
 
-    def __init__(self, spider, dupe_filter: Filter):
+    def __init__(self, spider, dup_filter: Filter):
         self.spider = spider
-        self.dupe_filter = dupe_filter
+        self.dup_filter = dup_filter
 
     def next_job(self, block=False):
         pass
@@ -34,7 +34,7 @@ class Scheduler:
         :return:
         """
         if isinstance(job, Request) and not job.dont_filter:
-            return not self.dupe_filter.request_seen(job)
+            return not self.dup_filter.request_seen(job)
         return True
 
 
@@ -62,8 +62,8 @@ class MemoryScheduler(Scheduler):
 
 class RedisScheduler(Scheduler):
 
-    def __init__(self, spider, dupe_filter: Filter):
-        super().__init__(spider, dupe_filter)
+    def __init__(self, spider, dup_filter: Filter):
+        super().__init__(spider, dup_filter)
         self.spider = spider
         self.server = spider.server
         self.request_key = f"{self.spider.redis_task_key}:request"
