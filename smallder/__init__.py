@@ -2,11 +2,11 @@ import os
 import re
 import sys
 
-from smallder.core.downloader import Downloader
 from smallder.core.item import Item
 from smallder.core.request import Request
 from smallder.core.response import Response
 from smallder.core.spider import Spider
+from smallder.core.downloader import Downloader
 
 sys.path.insert(0, re.sub(r"([\\/]items)|([\\/]spiders)", "", os.getcwd()))
 
