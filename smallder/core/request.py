@@ -40,7 +40,7 @@ class Request:
             proxies=None,
             dont_filter=False,
             verify=False,
-            allow_redirects=False,
+            allow_redirects=True,
             priority=0
     ):
         self.method = "POST" if method.upper() == "POST" or data and data != "{}" else "GET"
