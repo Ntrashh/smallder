@@ -51,7 +51,7 @@ class Engine:
             request = self.middleware_manager.process_request(request)
             response = self.download.download(request)
             response = self.middleware_manager.process_response(response)
-            self.spider.log.success(response)
+            self.spider.log.info(response)
             self.scheduler.add_job(response)
         except Exception as e:
             self.spider.log.exception(f"website:{request.meta.get('id')}  {request.url} 请求出现错误 \n {e}")

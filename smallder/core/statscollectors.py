@@ -67,7 +67,7 @@ class StatsCollector:
     def on_spider_stopped(self, sender, **kwargs):
         # 处理爬虫停止信号
         self.set_value("time", time.time() - self._start_time)
-        logger.success(f"Spider Close : {json.dumps(self.get_stats(), ensure_ascii=False, indent=4)}")
+        logger.info(f"Spider Close : {json.dumps(self.get_stats(), ensure_ascii=False, indent=4)}")
 
 
 @singleton
