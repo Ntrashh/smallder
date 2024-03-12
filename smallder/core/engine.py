@@ -83,10 +83,10 @@ class Engine:
             while rounds < end:
                 try:
                     if len(self.futures) > self.default_thread_count * 5:
-                        time.sleep(0.1)
+                        time.sleep(0.01)
                         continue
                     if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
-                        time.sleep(0.1)
+                        time.sleep(0.01)
                         rounds += 1
                     if self.start_requests is not None:
                         try:
