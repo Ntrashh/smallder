@@ -56,6 +56,8 @@ def parse_context(curl_command):
             occurrence = [m.start() for m in re.finditer(':', curl_header)]
             header_key, header_value = curl_header[:occurrence[1]], curl_header[occurrence[1] + 1:]
         else:
+            if len(curl_header.split(":", 1)) != 2:
+                continue
             header_key, header_value = curl_header.split(":", 1)
 
         if header_key.lower().strip("$") == 'cookie':
