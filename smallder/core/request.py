@@ -96,7 +96,8 @@ class Request:
         if self.cookies is not None:
             parts.append(f"    cookies = {self.cookies},")
 
-        callback_name = self.callback.__name__ if self.callback else "None"
+        callback_name = self.callback.__name__ if not isinstance(self.callback,
+                                                                 str) and self.callback is not None else self.callback
         parts.append(f"    callback = {callback_name}")
 
         parts.append(")")
