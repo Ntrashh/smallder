@@ -82,7 +82,7 @@ class Engine:
             end = 300 if self.spider.server else 10
             while rounds < end:
                 try:
-                    if len(self.futures) > self.default_thread_count * 5:
+                    if len(self.futures) > self.default_thread_count * 20:
                         time.sleep(0.01)
                         continue
                     if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
