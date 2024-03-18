@@ -54,7 +54,7 @@ class Engine:
             self.spider.log.info(response)
             self.scheduler.add_job(response)
         except Exception as e:
-            self.spider.log.exception(f"website:{request.meta.get('id')}  {request.url} 请求出现错误 \n {e}")
+            self.spider.log.exception(e)
 
 
     @stats.handler
@@ -67,7 +67,7 @@ class Engine:
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=True)
         except Exception as e:
-            self.spider.log.exception(f"website : {response.meta.get('id')}  {response.url} 回调方法出现错误 \n {e}")
+            self.spider.log.exception(e)
 
     @stats.handler
     def process_item(self, item=Item):
