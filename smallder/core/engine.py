@@ -79,14 +79,14 @@ class Engine:
     def engine(self):
         rounds = 0
         with ThreadPoolExecutor(max_workers=self.default_thread_count) as executor:
-            end = 300 if self.spider.server else 10
+            end = 600 if self.spider.server else 10
             while rounds < end:
                 try:
                     if len(self.futures) > self.default_thread_count * 20:
-                        time.sleep(0.01)
+                        time.sleep(0.1)
                         continue
                     if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
-                        time.sleep(0.01)
+                        time.sleep(0.1)
                         rounds += 1
                     if self.start_requests is not None:
                         try:
