@@ -44,7 +44,7 @@ requires = [
     'starlette',
     'typing_extensions',
     'uvicorn',
-    'urllib3==1.25.11',
+    'urllib3',
     "w3lib",
 ]
 
