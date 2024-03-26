@@ -6,3 +6,7 @@
 @Author  ：1mnoi
 @Date    ：2024/1/8 14:43 
 """
+
+
+class FetchError(Exception):
+    pass

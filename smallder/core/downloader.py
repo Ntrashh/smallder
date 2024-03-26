@@ -3,6 +3,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import traceback
 import requests
 
+from smallder.core.error import FetchError
 from smallder.utils.request import retry
 
 # 禁用SSL证书验证警告
@@ -37,3 +38,4 @@ class Downloader:
     def download(self, request: Request):
         response = self.fetch(request)
         return response
+

@@ -27,8 +27,6 @@ class Engine:
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
         self.default_thread_count = self.spider.thread_count if self.spider.thread_count else os.cpu_count() * 2
 
-
-
     def setup_signals(self):
         # 在这里注册爬虫开始和结束的信号
         self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
@@ -55,7 +53,6 @@ class Engine:
             self.scheduler.add_job(response)
         except Exception as e:
             self.spider.log.exception(e)
-
 
     @stats.handler
     def process_response(self, response=None):
@@ -157,7 +154,8 @@ class Engine:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.spider.log.info(f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+        self.spider.log.info(
+            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.signal_manager.send("SPIDER_STOPPED")

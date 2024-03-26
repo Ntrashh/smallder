@@ -43,8 +43,7 @@ class MiddlewareManager:
             try:
                 request = mw_instance.process_request(request)
             except AttributeError as e:
-                traceback.print_exc()
-                logger.error(f"{mw_instance} does not implement process_request: {e}")
+                logger.exception(e)
         return request
 
     def process_response(self, response):
@@ -53,6 +52,5 @@ class MiddlewareManager:
             try:
                 response = mw_instance.process_response(response)
             except AttributeError as e:
-                traceback.print_exc()
-                logger.warning(f"{mw_instance} does not implement process_response: {e}")
+                logger.exception(e)
         return response
