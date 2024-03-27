@@ -15,6 +15,7 @@ class Spider:
     start_urls = []
     log = logger
     thread_count = 0
+    retry = 3
     custom_settings = {}
 
     def setup_redis(self):

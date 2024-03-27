@@ -16,7 +16,6 @@ class Downloader:
         self.spider = spider
 
     @classmethod
-    @retry(retry_count=3)
     def fetch(cls, request: Request):
         # 假设 'request' 是一个已经定义好的请求对象，包含了必要的属性如method, url等
         with requests.request(

@@ -1,6 +1,7 @@
 import os
 import time
 import traceback
+import requests
 from concurrent.futures import ThreadPoolExecutor
 from smallder.api.app import FastAPIWrapper
 from smallder.core.customsignalmanager import CustomSignalManager
@@ -51,6 +52,9 @@ class Engine:
             response = self.middleware_manager.process_response(response)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
+        except requests.exceptions.ConnectTimeout:
+
+            self.scheduler.add_job(request)
         except Exception as e:
             self.spider.log.exception(e)
 
