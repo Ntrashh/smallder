@@ -58,6 +58,7 @@ class Request:
         self.verify = verify
         self.priority = priority
         self.allow_redirects = allow_redirects
+        self.retry = retry
         self._meta = dict(meta) if meta else None
         self._referer = referer if referer else None
 
