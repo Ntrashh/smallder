@@ -3,6 +3,7 @@ import time
 import traceback
 import requests
 from concurrent.futures import ThreadPoolExecutor
+from collections import deque
 from smallder.api.app import FastAPIWrapper
 from smallder.core.customsignalmanager import CustomSignalManager
 from smallder.core.downloader import Downloader
@@ -16,7 +17,7 @@ class Engine:
     stats = MemoryStatsCollector()
     signal_manager = CustomSignalManager()
     fastapi_manager = FastAPIWrapper()
-    futures = []
+    futures = deque()
 
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
