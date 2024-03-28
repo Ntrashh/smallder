@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import traceback
@@ -53,8 +54,7 @@ class Engine:
             response = self.middleware_manager.process_response(response)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
-        except requests.exceptions.ConnectTimeout:
-
+        except (requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout):
             self.scheduler.add_job(request)
         except Exception as e:
             self.spider.log.exception(e)
@@ -68,6 +68,8 @@ class Engine:
                 return
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=True)
+        except AttributeError as e:
+            self.spider.log.error(repr(e))
         except Exception as e:
             self.spider.log.exception(e)
 
@@ -164,3 +166,4 @@ class Engine:
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.signal_manager.send("SPIDER_STOPPED")
+        self.spider.log.success(f"Spider Close : {json.dumps(self.stats.get_stats(), ensure_ascii=False, indent=4)}")

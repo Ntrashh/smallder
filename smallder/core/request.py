@@ -35,7 +35,7 @@ class Request:
             data=None,
             cookies=None,
             timeout=5,
-            callback="parse",
+            callback=None,
             meta=None,
             referer=None,
             proxies=None,
@@ -99,8 +99,7 @@ class Request:
         if self.cookies is not None:
             parts.append(f"    cookies = {self.cookies},")
 
-        callback_name = self.callback.__name__ if not isinstance(self.callback,
-                                                                 str) and self.callback is not None else self.callback
+        callback_name = self.callback.__name__ if self.callback is not None else "None"
         parts.append(f"    callback = {callback_name}")
 
         parts.append(")")

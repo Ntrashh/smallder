@@ -37,7 +37,7 @@ class Spider:
                 "did you miss an 's'?)"
             )
         for url in self.start_urls:
-            yield Request(url, dont_filter=True)
+            yield Request(url=url)
 
     def make_request_for_redis(self, data):
         pass

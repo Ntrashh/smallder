@@ -20,14 +20,16 @@ class StatsCollector:
         }
 
         def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
             key = stats_mapping.get(func.__name__)
             if key == "response":
                 response = args[1]
                 status_code_key = f"status_code_{response.status_code}"
                 self.inc_value(status_code_key)
+            _r = args[1]
+            if getattr(_r, "retry", 0) > 0:
+                return result
             self.inc_value(key)
-            result = func(*args, **kwargs)
-            # And any post-processing after the function call
             return result
 
         return wrapper
@@ -67,7 +69,7 @@ class StatsCollector:
     def on_spider_stopped(self, sender, **kwargs):
         # 处理爬虫停止信号
         self.set_value("time", time.time() - self._start_time)
-        logger.info(f"Spider Close : {json.dumps(self.get_stats(), ensure_ascii=False, indent=4)}")
+
 
 
 @singleton
