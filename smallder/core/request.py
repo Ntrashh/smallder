@@ -80,9 +80,16 @@ class Request:
 
     @headers.setter
     def headers(self, value):
-        # 确保"Connection": "close"总是被设置
-        value["Connection"] = "close"
-        self._headers = value
+        if value is None:
+            # 允许headers被显式设置为None
+            self._headers = None
+        elif isinstance(value, dict):
+            # 如果value是字典，则添加"Connection": "close"
+            value["Connection"] = "close"
+            self._headers = value
+        else:
+            # 如果value既不是None也不是dict，抛出错误或采取其他处理
+            raise ValueError("headers must be a dictionary or None")
 
     @classmethod
     def from_curl(cls,
