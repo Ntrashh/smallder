@@ -6,10 +6,10 @@ StatsT = Dict[str, Any]
 
 
 class StatsCollector:
-    def __init__(self, spider):
+    def __init__(self):
         self._stats: StatsT = {}
         self._start_time = time.time()
-        self.spider = spider
+        # self.spider = spider
 
     def handler(self, func):
         stats_mapping = {
@@ -80,25 +80,25 @@ class MemoryStatsCollector(StatsCollector):
         self.spider_stats[spider.name] = stats
 
 
-class StatsCollectorFactory:
-    @classmethod
-    def create_stats_collector(cls, spider):
-
-        stats_collect = cls.load_filter(spider)
-        if stats_collect is None:
-            return StatsCollector(spider)
-        else:
-            return stats_collect(spider)
-
-    @classmethod
-    def load_filter(cls, spider):
-        mw_path = spider.custom_settings.get("stats_collector_class", "")
-        if not mw_path:
-            return
-        try:
-            module_path, class_name = mw_path.rsplit('.', 1)
-            module = importlib.import_module(module_path)
-            return getattr(module, class_name)
-        except (ImportError, AttributeError) as e:
-            spider.log.error(f"Failed to load stats_collector_class class {mw_path}: {e}")
-            return None
+# class StatsCollectorFactory:
+#     @classmethod
+#     def create_stats_collector(cls, spider):
+#
+#         stats_collect = cls.load_filter(spider)
+#         if stats_collect is None:
+#             return StatsCollector(spider)
+#         else:
+#             return stats_collect(spider)
+#
+#     @classmethod
+#     def load_filter(cls, spider):
+#         mw_path = spider.custom_settings.get("stats_collector_class", "")
+#         if not mw_path:
+#             return
+#         try:
+#             module_path, class_name = mw_path.rsplit('.', 1)
+#             module = importlib.import_module(module_path)
+#             return getattr(module, class_name)
+#         except (ImportError, AttributeError) as e:
+#             spider.log.error(f"Failed to load stats_collector_class class {mw_path}: {e}")
+#             return None
