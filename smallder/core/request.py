@@ -74,6 +74,16 @@ class Request:
             self._referer = ""
         return self._referer
 
+    @property
+    def headers(self):
+        return self._headers
+
+    @headers.setter
+    def headers(self, value):
+        # 确保"Connection": "close"总是被设置
+        value["Connection"] = "close"
+        self._headers = value
+
     @classmethod
     def from_curl(cls,
                   curl_command: str,

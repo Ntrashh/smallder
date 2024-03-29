@@ -55,7 +55,9 @@ class Engine:
             self.spider.log.info(response)
             self.scheduler.add_job(response)
         except (requests.exceptions.ConnectTimeout,requests.exceptions.ReadTimeout):
-            self.scheduler.add_job(request)
+            if request.retry < self.spider.retry:
+                request.retry = request.retry + 1
+                self.scheduler.add_job(request)
         except Exception as e:
             self.spider.log.exception(e)
 
