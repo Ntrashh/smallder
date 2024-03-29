@@ -54,7 +54,7 @@ class Engine:
             response = self.middleware_manager.process_response(response)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
-        except (requests.exceptions.ConnectTimeout, request.exceptions.ConnectionError,
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError,
                     requests.exceptions.ReadTimeout) as e:
             if request.retry < self.spider.retry:
                 request.retry = request.retry + 1
