@@ -13,6 +13,7 @@ class Request:
         "data",
         "cookies",
         "meta",
+        "timeout",
         "proxies",
         # "encoding",
         "priority",
