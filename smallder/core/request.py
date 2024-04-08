@@ -147,6 +147,8 @@ class Request:
             "callback": _find_method(spider, self.callback)
             if callable(self.callback)
             else self.callback,
+            "errback": _find_method(spider, self.errback) if callable(self.errback)
+            else self.errback,
         }
         for attr in self.attributes:
             d.setdefault(attr, getattr(self, attr))

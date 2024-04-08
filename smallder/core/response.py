@@ -75,6 +75,10 @@ class Response:
             except TypeError:
                 raise UnicodeDecodeError(f"  codec can't decode")
 
+    @property
+    def ok(self):
+        return self.status_code == 200
+
     def _auto_char_code(self):
         char_code = chardet.detect(self.content)
         encoding = char_code.get('encoding', 'utf-8')
