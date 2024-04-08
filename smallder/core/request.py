@@ -22,7 +22,7 @@ class Request:
         "verify",
         "allow_redirects",
         "retry",
-        # "errback",
+        "errback",
         # "flags",
         # "cb_kwargs",
     )
@@ -37,6 +37,7 @@ class Request:
             cookies=None,
             timeout=5,
             callback=None,
+            errback=None,
             meta=None,
             referer=None,
             proxies=None,
@@ -54,6 +55,7 @@ class Request:
         self.cookies = cookies
         self.timeout = timeout
         self.callback = callback
+        self.errback = errback
         self.proxies = proxies
         self.dont_filter = dont_filter
         self.verify = verify

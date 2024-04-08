@@ -8,6 +8,7 @@ from collections import deque
 from smallder.api.app import FastAPIWrapper
 from smallder.core.customsignalmanager import CustomSignalManager
 from smallder.core.downloader import Downloader
+from smallder.core.failure import Failure
 from smallder.core.item import Item
 from smallder.core.middleware import MiddlewareManager
 from smallder.core.scheduler import SchedulerFactory
@@ -61,23 +62,27 @@ class Engine:
                 self.spider.log.debug(f"重试{request.retry}次:{request}")
                 self.scheduler.add_job(request)
             else:
-                self.spider.log.exception(e)
+                self.process_callback_error(e=e, request=request)
         except Exception as e:
-            self.spider.log.exception(e)
+            if request.errback is not None:
+                self.process_callback_error(e=e, request=request)
+            else:
+                self.spider.log.exception(e)
 
     @stats.handler
     def process_response(self, response=None):
+        callback = response.request.callback or getattr(self.spider, "parse", None)
         try:
-            callback = response.request.callback or self.spider.paser
             _iters = callback(response)
             if _iters is None:
                 return
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=True)
-        except AttributeError as e:
-            self.spider.log.error(repr(e))
         except Exception as e:
-            self.spider.log.exception(e)
+            if response.request.errback is not None:
+                self.process_callback_error(e=e, request=response.request, response=response)
+            else:
+                self.spider.log.exception(e)
 
     @stats.handler
     def process_item(self, item=Item):
@@ -161,6 +166,14 @@ class Engine:
         if func is None:
             raise ValueError(f"{task} does not exist")
         return func
+
+    def process_callback_error(self, e, request, response=None):
+        if response:
+            callback = response.request.callback or getattr(self.spider, "parse", None)
+            failure = Failure(exception=e, request=request, response=response, func_name=callback.__name__)
+        else:
+            failure = Failure(exception=e, request=request, response=response)
+        request.errback(failure)
 
     def __enter__(self):
         self.signal_manager.send("SPIDER_STARTED")
