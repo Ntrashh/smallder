@@ -132,7 +132,10 @@ class Request:
     def replace(self, *args, **kwargs) -> "Request":
         """Create a new Request with the same attributes except for those given new values"""
         for x in self.attributes:
-            kwargs.setdefault(x, getattr(self, x))
+            if x in ["retry"]:
+                kwargs.setdefault(x, 0)
+            else:
+                kwargs.setdefault(x, getattr(self, x))
         cls = kwargs.pop("cls", self.__class__)
         return cls(*args, **kwargs)
 
