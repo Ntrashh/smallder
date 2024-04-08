@@ -59,6 +59,7 @@ class Spider:
                 failure.request.retry = failure.request.retry + 1
             self.log.debug(f"重试{failure.request.retry}次:{failure.request}")
             return failure.request
+        return failure.exception
 
     @classmethod
     def start(cls, **kwargs):

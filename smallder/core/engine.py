@@ -57,7 +57,9 @@ class Engine:
             self.scheduler.add_job(response)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=request)
-            if isinstance(process_error, BaseException):
+            if process_error is None:
+                self.spider.log.error(process_error)
+            elif isinstance(process_error, BaseException):
                 self.spider.log.error(process_error)
             else:
                 self.scheduler.add_job(process_error, block=True)
@@ -73,7 +75,9 @@ class Engine:
                 self.scheduler.add_job(_iter, block=True)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=response.request, response=response)
-            if isinstance(process_error, BaseException):
+            if process_error is None:
+                self.spider.log.error(process_error)
+            elif isinstance(process_error, BaseException):
                 self.spider.log.error(process_error)
             else:
                 self.scheduler.add_job(process_error, block=True)
