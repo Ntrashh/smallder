@@ -1,3 +1,4 @@
+import requests
 from loguru import logger
 
 from smallder import Request
@@ -50,6 +51,14 @@ class Spider:
 
     def pipline(self, item):
         pass
+
+    def error_callback(self, failure):
+        if failure.check((requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError,
+                          requests.exceptions.ReadTimeout)):
+            if failure.request.retry < self.retry:
+                failure.request.retry = failure.request.retry + 1
+            self.log.debug(f"重试{failure.request.retry}次:{failure.request}")
+            return failure.request
 
     @classmethod
     def start(cls, **kwargs):

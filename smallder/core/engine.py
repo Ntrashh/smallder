@@ -55,19 +55,12 @@ class Engine:
             response = self.middleware_manager.process_response(response)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout) as e:
-            if request.retry < self.spider.retry:
-                request.retry = request.retry + 1
-                self.spider.log.debug(f"重试{request.retry}次:{request}")
-                self.scheduler.add_job(request)
-            else:
-                self.process_callback_error(e=e, request=request)
         except Exception as e:
-            if request.errback is not None:
-                self.process_callback_error(e=e, request=request)
+            process_error = self.process_callback_error(e=e, request=request)
+            if isinstance(process_error, BaseException):
+                self.spider.log.error(process_error)
             else:
-                self.spider.log.exception(e)
+                self.scheduler.add_job(process_error, block=True)
 
     @stats.handler
     def process_response(self, response=None):
@@ -79,10 +72,11 @@ class Engine:
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=True)
         except Exception as e:
-            if response.request.errback is not None:
-                self.process_callback_error(e=e, request=response.request, response=response)
+            process_error = self.process_callback_error(e=e, request=response.request, response=response)
+            if isinstance(process_error, BaseException):
+                self.spider.log.error(process_error)
             else:
-                self.spider.log.exception(e)
+                self.scheduler.add_job(process_error, block=True)
 
     @stats.handler
     def process_item(self, item=Item):
@@ -168,12 +162,13 @@ class Engine:
         return func
 
     def process_callback_error(self, e, request, response=None):
+        request_errback = request.errback or self.spider.error_callback
         if response:
             callback = response.request.callback or getattr(self.spider, "parse", None)
             failure = Failure(exception=e, request=request, response=response, func_name=callback.__name__)
         else:
             failure = Failure(exception=e, request=request, response=response)
-        request.errback(failure)
+        return request_errback(failure)
 
     def __enter__(self):
         self.signal_manager.send("SPIDER_STARTED")
