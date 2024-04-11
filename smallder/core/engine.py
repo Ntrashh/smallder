@@ -50,15 +50,14 @@ class Engine:
             middleware_request = self.spider.download_middleware(request)
             if middleware_request is not None:
                 request = middleware_request
-            request = self.middleware_manager.process_request(request)
-            response = self.download.download(request)
-            response = self.middleware_manager.process_response(response)
+            middleware_manager = self.middleware_manager.process_request(request)
+            response = self.download.download(middleware_manager)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=request)
             if process_error is None:
-                self.spider.log.exception(process_error)
+                pass
             elif isinstance(process_error, BaseException):
                 self.spider.log.exception(process_error)
             else:
@@ -66,8 +65,9 @@ class Engine:
 
     @stats.handler
     def process_response(self, response=None):
-        callback = response.request.callback or getattr(self.spider, "parse", None)
         try:
+            response = self.middleware_manager.process_response(response)
+            callback = response.request.callback or getattr(self.spider, "parse", None)
             _iters = callback(response)
             if _iters is None:
                 return
@@ -76,7 +76,7 @@ class Engine:
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=response.request, response=response)
             if process_error is None:
-                self.spider.log.exception(process_error)
+                pass
             elif isinstance(process_error, BaseException):
                 self.spider.log.exception(process_error)
             else:

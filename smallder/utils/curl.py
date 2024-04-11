@@ -109,7 +109,7 @@ def curl_to_request_kwargs(curl_command, **kargs):
         formatter = {
             'method': parsed_context.method,
             'url': parsed_context.url,
-            'data': dict_to_pretty_string(parsed_context.data),
+            'data': parsed_context.data,
             'headers': dict(parsed_context.headers),
             # 在curl中不允许出现cookie
             # 'cookies': dict(parsed_context.cookies),
@@ -119,17 +119,4 @@ def curl_to_request_kwargs(curl_command, **kargs):
         raise Exception(e)
 
 
-def dict_to_pretty_string(the_dict, indent=4):
-    if not the_dict:
-        return {}
-    if isinstance(the_dict, dict):
-        return json.dumps(the_dict, sort_keys=True, indent=indent, separators=(',', ': '))
-    try:
-        the_dict = json.loads(the_dict)
-        return json.dumps(the_dict, sort_keys=True, indent=indent, separators=(',', ': '))
-    except json.decoder.JSONDecodeError:
-        parsed_result = {}
-        pairs = parse_qsl(the_dict, keep_blank_values=True, strict_parsing=True)
-        for name, value in pairs:
-            parsed_result[name] = value
-        return parsed_result
+

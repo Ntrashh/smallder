@@ -33,7 +33,7 @@ class Scheduler:
         :param job:
         :return:
         """
-        if isinstance(job, Request) and not job.dont_filter:
+        if isinstance(job, Request) and not job.dont_filter and job.retry != 0:
             return not self.dup_filter.request_seen(job)
         return True
 
@@ -177,15 +177,14 @@ class SchedulerFactory:
 
     @classmethod
     def create_scheduler(cls, spider):
-
         dup_filter = FilterFactory.create_filter(spider)
+        _scheduler_cls = cls.load_filter(spider)
+        if _scheduler_cls is not None:
+            instance = _scheduler_cls(spider, dup_filter)
+            return instance
         if spider.server is None:
             scheduler = MemoryScheduler(spider, dup_filter)
         else:
-            _scheduler_cls = cls.load_filter(spider)
-            if _scheduler_cls is not None:
-                instance = _scheduler_cls(spider, dup_filter)
-                return instance
             if spider.redis_task_key:
                 scheduler = RedisStartScheduler(spider, dup_filter)
             else:
