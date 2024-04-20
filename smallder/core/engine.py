@@ -2,7 +2,6 @@ import json
 import os
 import time
 import traceback
-import requests
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from smallder.api.app import FastAPIWrapper
@@ -56,12 +55,8 @@ class Engine:
             self.scheduler.add_job(response)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=request)
-            if process_error is None:
-                pass
-            elif isinstance(process_error, BaseException):
+            if isinstance(process_error, BaseException):
                 self.spider.log.exception(process_error)
-            else:
-                self.scheduler.add_job(process_error, block=True)
 
     @stats.handler
     def process_response(self, response=None):
@@ -75,12 +70,8 @@ class Engine:
                 self.scheduler.add_job(_iter, block=True)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=response.request, response=response)
-            if process_error is None:
-                pass
-            elif isinstance(process_error, BaseException):
+            if isinstance(process_error, BaseException):
                 self.spider.log.exception(process_error)
-            else:
-                self.scheduler.add_job(process_error, block=True)
 
     @stats.handler
     def process_item(self, item=Item):
@@ -166,13 +157,9 @@ class Engine:
         return func
 
     def process_callback_error(self, e, request, response=None):
-        request_errback = request.errback or self.spider.error_callback
-        if response:
-            callback = response.request.callback or getattr(self.spider, "parse", None)
-            failure = Failure(exception=e, request=request, response=response, func_name=callback.__name__)
-        else:
-            failure = Failure(exception=e, request=request, response=response)
-        return request_errback(failure)
+        request_err_back = request.errback or self.spider.error_callback
+        failure = Failure(exception=e, request=request, response=response)
+        return request_err_back(failure)
 
     def __enter__(self):
         self.signal_manager.send("SPIDER_STARTED")
