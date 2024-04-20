@@ -45,7 +45,7 @@ class Request:
             verify=False,
             allow_redirects=True,
             priority=0,
-            retry: int = 0
+            retry: int = 0  # 控制单个请求的重试次数
     ):
         self.method = "POST" if method.upper() == "POST" or data and data != "{}" else "GET"
         self.url = url
@@ -132,10 +132,7 @@ class Request:
     def replace(self, *args, **kwargs) -> "Request":
         """Create a new Request with the same attributes except for those given new values"""
         for x in self.attributes:
-            if x in ["retry"]:
-                kwargs.setdefault(x, 0)
-            else:
-                kwargs.setdefault(x, getattr(self, x))
+            kwargs.setdefault(x, getattr(self, x))
         cls = kwargs.pop("cls", self.__class__)
         return cls(*args, **kwargs)
 

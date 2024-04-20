@@ -33,7 +33,7 @@ class Scheduler:
         :param job:
         :return:
         """
-        if isinstance(job, Request) and not job.dont_filter and job.retry != 0:
+        if isinstance(job, Request) and not job.dont_filter:
             return not self.dup_filter.request_seen(job)
         return True
 

@@ -25,16 +25,12 @@ class StatsCollector:
                 response = args[1]
                 status_code_key = f"status_code_{response.status_code}"
                 self.inc_value(status_code_key)
-            _r = args[1]
-            if getattr(_r, "retry", 0) > 0:
-                return result
             self.inc_value(key)
             return result
 
         return wrapper
 
     def get_value(
-
             self, key: str, default: Any = None) -> Any:
         return self._stats.get(key, default)
 
