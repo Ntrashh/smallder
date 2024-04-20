@@ -15,17 +15,20 @@ class Response:
         "request",
         "encoding",
         "cookies",
+        "elapsed"
         # "ip_address",
         # "protocol",
     ]
 
-    def __init__(self, url=None, status_code=200, content=None, request=None, encoding="utf-8", cookies=None):
+    def __init__(self, url=None, status_code=200, content=None, request=None, encoding="utf-8", cookies=None,
+                 elapsed=0):
         self.url = url
         self.content = content
         self.request = request
         self.status_code = status_code
         self.encoding = encoding
         self.cookies = cookies or {}
+        self.elapsed = elapsed
 
     def __str__(self):
         parts = ["Response("]

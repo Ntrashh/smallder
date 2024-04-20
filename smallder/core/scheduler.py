@@ -72,6 +72,7 @@ class RedisScheduler(Scheduler):
     def _dict_to_request(self, d):
         if d.get("callback") is None:
             return d
+        d["errback"] = getattr(self.spider, d["errback"])
         d["callback"] = getattr(self.spider, d["callback"])
         return Request(**d)
 

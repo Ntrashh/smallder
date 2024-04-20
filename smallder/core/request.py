@@ -45,7 +45,7 @@ class Request:
             verify=False,
             allow_redirects=True,
             priority=0,
-            retry=0
+            retry: int = 0
     ):
         self.method = "POST" if method.upper() == "POST" or data and data != "{}" else "GET"
         self.url = url

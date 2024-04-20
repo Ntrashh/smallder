@@ -1,6 +1,4 @@
-import requests
 from loguru import logger
-
 from smallder import Request
 from smallder.core.connection import from_setting
 from smallder.core.engine import Engine
@@ -15,9 +13,9 @@ class Spider:
     redis_task_key = ""
     start_urls = []
     log = logger
-    thread_count = 0
-    retry = 3
-    custom_settings = {}
+    thread_count = 0  # 线程总数
+    retry: int = 3  # 重试次数
+    custom_settings = {}  # 定制配置
 
     def setup_redis(self):
         if self.server is not None:
@@ -53,12 +51,6 @@ class Spider:
         pass
 
     def error_callback(self, failure):
-        if failure.check((requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError,
-                          requests.exceptions.ReadTimeout)):
-            if failure.request.retry < self.retry:
-                failure.request.retry = failure.request.retry + 1
-            self.log.debug(f"重试{failure.request.retry}次:{failure.request}")
-            return failure.request
         return failure.exception
 
     @classmethod
