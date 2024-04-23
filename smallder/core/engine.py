@@ -67,7 +67,7 @@ class Engine:
             if _iters is None:
                 return
             for _iter in _iters:
-                self.scheduler.add_job(_iter, block=True)
+                self.scheduler.add_job(_iter, block=False)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=response.request, response=response)
             if isinstance(process_error, BaseException):
@@ -117,11 +117,8 @@ class Engine:
         rounds = 0
         while rounds < 6:
             try:
-                if len(self.futures) > self.default_thread_count * 6:
-                    time.sleep(0.5)
-                    continue
-                if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
-                    time.sleep(0.5)
+                if self.scheduler.empty() and self.start_requests is None:
+                    time.sleep(0.2)
                     rounds += 1
                 if self.start_requests is not None:
                     try:
@@ -167,7 +164,7 @@ class Engine:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.spider.log.info(
-            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},任务队列是否为空:{self.scheduler.empty()} ")
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.signal_manager.send("SPIDER_STOPPED")

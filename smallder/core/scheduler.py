@@ -18,7 +18,7 @@ class Scheduler:
     def next_job(self, block=False):
         pass
 
-    def add_job(self, job, block=True):
+    def add_job(self, job, block=False):
         pass
 
     def size(self):
@@ -50,7 +50,7 @@ class MemoryScheduler(Scheduler):
         except Exception:
             traceback.print_exc()
 
-    def add_job(self, job, block=True):
+    def add_job(self, job, block=False):
         self.queue.put(job, block=block)
 
     def size(self):
@@ -94,7 +94,7 @@ class RedisScheduler(Scheduler):
         except Exception as e:
             self.spider.log.exception(e)
 
-    def add_job(self, job, block=True):
+    def add_job(self, job, block=False):
         if isinstance(job, Request):
             try:
                 _str = json.dumps(job.to_dict(self.spider))
@@ -135,10 +135,10 @@ class RedisStartScheduler(RedisScheduler):
                         reqs = self.spider.make_request_for_redis(data)
                         if isinstance(reqs, Iterable):
                             for req in reqs:
-                                self.queue.put(req, block=True)
+                                self.queue.put(req, block=block)
                                 found += 1
                         elif reqs:
-                            self.queue.put(reqs, block=True)
+                            self.queue.put(reqs, block=block)
                             found += 1
                         else:
                             print(f"Request not made from data: {data}")
