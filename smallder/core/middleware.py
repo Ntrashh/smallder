@@ -48,7 +48,7 @@ class MiddlewareManager:
 
     def process_response(self, response):
 
-        for mw_instance, _ in sorted(self.loaded_middlewares, key=lambda x: x[1], reverse=True):
+        for mw_instance, _ in sorted(self.loaded_middlewares, key=lambda x: x[1]):
             try:
                 response = mw_instance.process_response(response)
             except AttributeError as e:
