@@ -28,7 +28,7 @@ class Engine:
         self.middleware_manager = MiddlewareManager(self.spider)
         self.start_requests = iter(self.spider.start_request())
         self.setup_signals()
-        self.spider.setup_redis()
+        self.spider.setup_server()
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
         self.default_thread_count = self.spider.thread_count if self.spider.thread_count else os.cpu_count() * 2
 

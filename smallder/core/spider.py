@@ -26,6 +26,11 @@ class Spider:
         "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
     }  # 定制配置
 
+
+    def setup_server(self):
+        self.setup_redis()
+        self.setup_mysql()
+
     def setup_redis(self):
         if self.server is not None:
             return
