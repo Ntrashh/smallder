@@ -4,6 +4,8 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
+
+from smallder import Request
 from smallder.api.app import FastAPIWrapper
 from smallder.core.customsignalmanager import CustomSignalManager
 from smallder.core.downloader import Downloader
@@ -46,17 +48,20 @@ class Engine:
     @stats.handler
     def process_request(self, request=None):
         try:
-            middleware_request = self.spider.download_middleware(request)
-            if middleware_request is not None:
-                request = middleware_request
-            middleware_manager = self.middleware_manager.process_request(request)
-            response = self.download.download(middleware_manager)
+
+            middleware_manager_request = self.middleware_manager.process_request(request)
+            download_middleware_request = self.spider.download_middleware(middleware_manager_request)
+            if download_middleware_request is not None:
+                middleware_manager_request = download_middleware_request
+            response = self.download.download(middleware_manager_request)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=request)
             if isinstance(process_error, BaseException):
                 self.spider.log.exception(process_error)
+            elif isinstance(process_error, Request):
+                self.scheduler.add_job(process_error)
 
     @stats.handler
     def process_response(self, response=None):

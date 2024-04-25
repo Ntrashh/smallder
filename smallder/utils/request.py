@@ -6,6 +6,7 @@ from typing import Iterable, Optional, Tuple, Union
 from weakref import WeakKeyDictionary
 from w3lib.url import canonicalize_url
 
+from smallder import Request
 
 
 def to_unicode(
@@ -99,3 +100,25 @@ def retry(retry_count=3, delay=1, allowed_exceptions=(Exception,)):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def request_from_dict(d: dict, spider):
+    """Create a :class:`~scrapy.Request` object from a dict.
+
+    If a spider is given, it will try to resolve the callbacks looking at the
+    spider for methods with the same name.
+    """
+    kwargs = {key: value for key, value in d.items() if key in Request.attributes}
+    if d.get("callback") and spider:
+        kwargs["callback"] = _get_method(spider, d["callback"])
+    if d.get("errback") and spider:
+        kwargs["errback"] = _get_method(spider, d["errback"])
+    return Request(**kwargs)
+
+def _get_method(obj, name):
+    """Helper function for request_from_dict"""
+    name = str(name)
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        raise ValueError(f"Method {name!r} not found in: {obj}")

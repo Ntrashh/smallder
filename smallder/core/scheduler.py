@@ -6,6 +6,7 @@ import traceback
 from collections.abc import Iterable
 from smallder import Request
 from smallder.core.dupfilter import Filter, FilterFactory
+from smallder.utils.request import request_from_dict
 
 
 class Scheduler:
@@ -69,17 +70,13 @@ class RedisScheduler(Scheduler):
         self.request_key = f"{self.spider.redis_task_key}:request"
         self.batch_size = self.spider.batch_size or 10
 
-    def _dict_to_request(self, d):
-        if d.get("callback") is None:
-            return d
-        d["errback"] = getattr(self.spider, d["errback"])
-        d["callback"] = getattr(self.spider, d["callback"])
-        return Request(**d)
+    def _request_from_dict(self, d):
+        return request_from_dict(d,self.spider)
 
     def pop_redis_to_queue(self, redis_key):
         datas = self.pop_list_queue(redis_key, self.batch_size)
         for byte_data in datas:
-            data = json.loads(byte_data.decode(), object_hook=self._dict_to_request)
+            data = self._request_from_dict(json.loads(byte_data.decode()))
             self.queue.put(data)
 
     def next_job(self, block=False):
