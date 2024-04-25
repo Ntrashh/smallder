@@ -46,6 +46,7 @@ requires = [
     'uvicorn',
     'urllib3',
     "w3lib",
+    "SQLAlchemy"
 ]
 
 setup(
