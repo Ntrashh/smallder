@@ -26,7 +26,6 @@ class Spider:
         "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
     }  # 定制配置
 
-
     def setup_server(self):
         self.setup_redis()
         self.setup_mysql()
@@ -47,6 +46,13 @@ class Spider:
         if not db_url:
             return
         self.mysql_server = from_mysql_setting(db_url)
+
+    def setup(self):
+        """
+        引擎开始启动的时候会通知到这里,这里可以做一些自定义设置
+        @return:
+        """
+        pass
 
     def start_request(self):
         if not len(self.start_urls):

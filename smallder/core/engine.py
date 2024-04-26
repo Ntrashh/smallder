@@ -24,17 +24,18 @@ class Engine:
 
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
+        self.spider.setup_server()
         self.download = Downloader(self.spider)
         self.middleware_manager = MiddlewareManager(self.spider)
-        self.start_requests = iter(self.spider.start_request())
-        self.setup_signals()
-        self.spider.setup_server()
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
         self.default_thread_count = self.spider.thread_count if self.spider.thread_count else os.cpu_count() * 2
+        self.start_requests = iter(self.spider.start_request())
+        self.setup_signals()
 
     def setup_signals(self):
         # 在这里注册爬虫开始和结束的信号
         self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
+        self.signal_manager.connect("SPIDER_STOPPED", self.spider.setup)
         self.signal_manager.connect("SPIDER_STARTED", self.middleware_manager.load_middlewares)
         if self.spider.fastapi:
             self.signal_manager.connect("SPIDER_STARTED", self.fastapi_manager.run)
