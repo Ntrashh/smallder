@@ -192,6 +192,8 @@ class SchedulerFactory:
     @classmethod
     def load_filter(cls, spider):
         mw_path = spider.custom_settings.get("scheduler_class", "")
+        if not mw_path:
+            return
         try:
             if not mw_path:
                 return

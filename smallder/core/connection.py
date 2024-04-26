@@ -1,4 +1,4 @@
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 
 import redis
 from sqlalchemy import create_engine
@@ -18,7 +18,7 @@ def from_mysql_setting(mysql_url):
     # 解析数据库URL
     parsed_url = urlparse(mysql_url)
     engine = create_engine(
-        f'mysql+pymysql://{parsed_url.username}:{parsed_url.password}@{parsed_url.hostname}:{parsed_url.port}/{parsed_url.path.lstrip("/")}',
+        f'mysql+pymysql://{quote(parsed_url.username)}:{quote(parsed_url.password)}@{parsed_url.hostname}:{parsed_url.port}/{parsed_url.path.lstrip("/")}',
         echo=True,  # 打印SQL语句，便于调试
         pool_size=100,
         max_overflow=100
