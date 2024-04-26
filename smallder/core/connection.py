@@ -19,7 +19,7 @@ def from_mysql_setting(mysql_url):
     parsed_url = urlparse(mysql_url)
     engine = create_engine(
         f'mysql+pymysql://{quote(parsed_url.username)}:{quote(parsed_url.password)}@{parsed_url.hostname}:{parsed_url.port}/{parsed_url.path.lstrip("/")}',
-        echo=True,  # 打印SQL语句，便于调试
+        echo=False,  # 打印SQL语句，便于调试
         pool_size=100,
         max_overflow=100
     )

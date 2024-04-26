@@ -33,12 +33,13 @@ class Engine:
         self.setup_signals()
 
     def setup_signals(self):
-        # 在这里注册爬虫开始和结束的信号
-        self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
-        self.signal_manager.connect("SPIDER_STOPPED", self.spider.setup)
+        # 在这里注册爬虫开始
         self.signal_manager.connect("SPIDER_STARTED", self.middleware_manager.load_middlewares)
+        self.signal_manager.connect("SPIDER_STARTED", self.spider.setup)
         if self.spider.fastapi:
             self.signal_manager.connect("SPIDER_STARTED", self.fastapi_manager.run)
+        # 在这里注册爬虫结束的信号
+        self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
 
     def future_done(self, future):
         try:
