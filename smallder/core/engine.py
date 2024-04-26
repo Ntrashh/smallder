@@ -18,7 +18,6 @@ from smallder.core.statscollectors import MemoryStatsCollector
 
 class Engine:
     stats = MemoryStatsCollector()
-    signal_manager = CustomSignalManager()
     fastapi_manager = FastAPIWrapper()
     futures = deque()
 
@@ -34,12 +33,12 @@ class Engine:
 
     def setup_signals(self):
         # 在这里注册爬虫开始
-        self.signal_manager.connect("SPIDER_STARTED", self.middleware_manager.load_middlewares)
-        self.signal_manager.connect("SPIDER_STARTED", self.spider.setup)
+        self.spider.connect_start_signal(self.middleware_manager.load_middlewares)
+        self.spider.connect_start_signal(self.spider.setup)
         if self.spider.fastapi:
-            self.signal_manager.connect("SPIDER_STARTED", self.fastapi_manager.run)
+            self.spider.connect_start_signal(self.fastapi_manager.run)
         # 在这里注册爬虫结束的信号
-        self.signal_manager.connect("SPIDER_STOPPED", self.stats.on_spider_stopped)
+        self.spider.connect_stop_signal(self.stats.on_spider_stopped)
 
     def future_done(self, future):
         try:
@@ -166,7 +165,7 @@ class Engine:
         return request_err_back(failure)
 
     def __enter__(self):
-        self.signal_manager.send("SPIDER_STARTED")
+        self.spider.signal_manager.send("SPIDER_STARTED")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -174,5 +173,5 @@ class Engine:
             f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},任务队列是否为空:{self.scheduler.empty()} ")
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
-        self.signal_manager.send("SPIDER_STOPPED")
+        self.spider.signal_manager.send("SPIDER_STOPPED")
         self.spider.log.success(f"Spider Close : {json.dumps(self.stats.get_stats(), ensure_ascii=False, indent=4)}")

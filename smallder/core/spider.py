@@ -1,10 +1,12 @@
 from loguru import logger
 from smallder import Request
 from smallder.core.connection import from_redis_setting, from_mysql_setting
+from smallder.core.customsignalmanager import CustomSignalManager
 from smallder.core.engine import Engine
 
 
 class Spider:
+    signal_manager = CustomSignalManager()
     name = "base"
     fastapi = True  # 控制内部统计api的数据
     server = None  # redis连接server
@@ -25,6 +27,12 @@ class Spider:
         "scheduler_class": "",  # "scheduler.xxxxx.xxxxxx"
         "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
     }  # 定制配置
+
+    def connect_start_signal(self, func):
+        self.signal_manager.connect("SPIDER_STARTED", func)
+
+    def connect_stop_signal(self, func):
+        self.signal_manager.connect("SPIDER_STOPPED", func)
 
     def setup_server(self):
         self.setup_redis()
