@@ -68,11 +68,24 @@ def fingerprint(
             data = ""
         else:
             data = request.data
+
+        if isinstance(request.params, dict):
+            if request.params:
+                params = json.dumps(request.params)
+            else:
+                params = ""
+        elif request.params is None:
+            params = ""
+        else:
+            params = request.params
         fingerprint_data = {
             "method": to_unicode(request.method),
             "url": canonicalize_url(request.url, keep_fragments=keep_fragments),
             "body": (data.encode() or b"").hex(),
         }
+        if params:
+            fingerprint_data["params"] = (params.encode() or b"").hex()
+
         fingerprint_json = json.dumps(fingerprint_data, sort_keys=True)
         cache[cache_key] = hashlib.sha1(fingerprint_json.encode()).digest()
     return cache[cache_key]
@@ -86,6 +99,7 @@ def retry(retry_count=3, delay=1, allowed_exceptions=(Exception,)):
     :param delay: 重试间隔时间（秒）
     :param allowed_exceptions: 允许重试的异常类型
     """
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -98,7 +112,9 @@ def retry(retry_count=3, delay=1, allowed_exceptions=(Exception,)):
                     time.sleep(delay)
                     attempts += 1
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -114,6 +130,7 @@ def request_from_dict(d: dict, spider):
     if d.get("errback") and spider:
         kwargs["errback"] = _get_method(spider, d["errback"])
     return Request(**kwargs)
+
 
 def _get_method(obj, name):
     """Helper function for request_from_dict"""
