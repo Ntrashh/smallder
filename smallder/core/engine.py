@@ -35,6 +35,7 @@ class Engine:
         # 在这里注册爬虫开始
         self.spider.connect_start_signal(self.middleware_manager.load_middlewares)
         self.spider.connect_start_signal(self.spider.setup)
+        self.spider.connect_start_signal(self.stats.on_spider_start)
         if self.spider.fastapi:
             self.spider.connect_start_signal(self.fastapi_manager.run)
         # 在这里注册爬虫结束的信号

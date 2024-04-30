@@ -2,6 +2,7 @@ import importlib
 import time
 from typing import Any, Dict
 from smallder.utils.utils import singleton
+
 StatsT = Dict[str, Any]
 
 
@@ -61,6 +62,9 @@ class StatsCollector:
     def _persist_stats(self, stats: StatsT, spider) -> None:
         pass
 
+    def on_spider_start(self, sender, **kwargs) -> None:
+        self._start_time = time.time()
+
     def on_spider_stopped(self, sender, **kwargs):
         # 处理爬虫停止信号
         self.set_value("time", time.time() - self._start_time)
@@ -74,7 +78,6 @@ class MemoryStatsCollector(StatsCollector):
 
     def _persist_stats(self, stats: StatsT, spider) -> None:
         self.spider_stats[spider.name] = stats
-
 
 # class StatsCollectorFactory:
 #     @classmethod
