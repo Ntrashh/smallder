@@ -3,6 +3,7 @@ from urllib3 import Retry
 from smallder import Request, Response
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import requests
+
 # 禁用SSL证书验证警告
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -44,5 +45,8 @@ class Downloader:
                                 cookies=response.cookies.get_dict(), elapsed=response.elapsed)
 
     def download(self, request: Request):
-        response = self.fetch(request, self.spider.retry)
+        if request.fetch:
+            response = request.fetch(request)
+        else:
+            response = self.fetch(request, self.spider.retry)
         return response

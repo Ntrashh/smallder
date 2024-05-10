@@ -7,7 +7,6 @@ from collections import deque
 
 from smallder import Request
 from smallder.api.app import FastAPIWrapper
-from smallder.core.customsignalmanager import CustomSignalManager
 from smallder.core.downloader import Downloader
 from smallder.core.failure import Failure
 from smallder.core.item import Item
@@ -50,7 +49,6 @@ class Engine:
     @stats.handler
     def process_request(self, request=None):
         try:
-
             middleware_manager_request = self.middleware_manager.process_request(request)
             download_middleware_request = self.spider.download_middleware(middleware_manager_request)
             if download_middleware_request is not None:

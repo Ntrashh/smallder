@@ -23,6 +23,7 @@ class Request:
         "allow_redirects",
         "retry",
         "errback",
+        "fetch"
         # "flags",
         # "cb_kwargs",
     )
@@ -36,8 +37,8 @@ class Request:
             data=None,
             cookies=None,
             timeout=5,
-            callback=None,
-            errback=None,
+            callback="parse",
+            errback="error_callback",
             meta=None,
             referer=None,
             proxies=None,
@@ -45,6 +46,7 @@ class Request:
             verify=False,
             allow_redirects=True,
             priority=0,
+            fetch=None,
             retry: int = 0  # 控制单个请求的重试次数
     ):
         self.method = "POST" if method.upper() == "POST" or data and data != "{}" else "GET"
@@ -62,6 +64,7 @@ class Request:
         self.priority = priority
         self.allow_redirects = allow_redirects
         self.retry = retry
+        self.fetch = fetch
         self._meta = dict(meta) if meta else None
         self._referer = referer if referer else None
 
@@ -146,6 +149,7 @@ class Request:
             else self.callback,
             "errback": _find_method(spider, self.errback) if callable(self.errback)
             else self.errback,
+            "fetch": _find_method(spider, self.fetch) if callable(self.fetch) else self.fetch,
         }
         for attr in self.attributes:
             d.setdefault(attr, getattr(self, attr))

@@ -129,6 +129,8 @@ def request_from_dict(d: dict, spider):
         kwargs["callback"] = _get_method(spider, d["callback"])
     if d.get("errback") and spider:
         kwargs["errback"] = _get_method(spider, d["errback"])
+    if d.get("fetch") and spider:
+        kwargs["fetch"] = _get_method(spider, d["fetch"])
     return Request(**kwargs)
 
 
