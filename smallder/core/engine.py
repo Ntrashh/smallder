@@ -4,7 +4,6 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
-
 from smallder import Request
 from smallder.api.app import FastAPIWrapper
 from smallder.core.downloader import Downloader
@@ -67,7 +66,7 @@ class Engine:
     def process_response(self, response=None):
         try:
             response = self.middleware_manager.process_response(response)
-            callback = response.request.callback or getattr(self.spider, "parse", None)
+            callback = response.request.callback or getattr(self.spider, "error_callback", None)
             _iters = callback(response)
             if _iters is None:
                 return
@@ -159,7 +158,7 @@ class Engine:
         return func
 
     def process_callback_error(self, e, request, response=None):
-        request_err_back = request.errback or self.spider.error_callback
+        request_err_back = request.errback or getattr(self.spider, "parse", None)
         failure = Failure(exception=e, request=request, response=response)
         return request_err_back(failure)
 
