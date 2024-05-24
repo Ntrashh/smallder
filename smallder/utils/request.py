@@ -49,7 +49,7 @@ def fingerprint(
         request,
         *,
         include_headers: Optional[Iterable[Union[bytes, str]]] = None,
-        keep_fragments: bool = False,
+        keep_fragments: bool = True,
 ) -> bytes:
     processed_include_headers: Optional[Tuple[bytes, ...]] = None
     if include_headers:
