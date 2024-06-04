@@ -10,6 +10,7 @@ class Request:
         "callback",
         "method",
         "headers",
+        "params",
         "data",
         "cookies",
         "meta",
