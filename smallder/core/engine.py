@@ -158,7 +158,7 @@ class Engine:
         return func
 
     def process_callback_error(self, e, request, response=None):
-        request_err_back = request.errback or getattr(self.spider, "parse", None)
+        request_err_back = request.errback or getattr(self.spider, "error_callback", None)
         failure = Failure(exception=e, request=request, response=response)
         return request_err_back(failure)
 
