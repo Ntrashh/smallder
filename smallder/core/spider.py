@@ -10,14 +10,16 @@ class Spider:
     name = "base"
     fastapi = True  # 控制内部统计api的数据
     server = None  # redis连接server
-    mysql_server = None
+    mysql_server = None  # mysql链接server
     redis_url = ""  # redis连接信息
     batch_size = 0  # 批次从redis中获取多少数据
-    redis_task_key = ""
+    redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
     log = logger
     thread_count = 0  # 线程总数
     retry: int = 3  # 重试次数
+    pipline_mode = "single"  # 两种模式 single代表单条入库,list代表多条入库
+    pipline_batch = 100  # 只有在pipline_mode=list时生效,代表多少条item进入pipline,默认100
     custom_settings = {
         "middleware_settings": {
             # "middleware.xxxx.xxx.xxxx": 100,
@@ -82,6 +84,35 @@ class Spider:
         pass
 
     def pipline(self, item):
+
+        """
+        @param item:
+        @return:
+        # 插入数据
+        data = [
+            ('Object 1',),
+            ('Object 2',),
+            ('Object 3',)
+        ]
+
+        # 使用原生 SQL 进行批量插入多条数据
+        with self.mysql_server.connect() as connection:
+            connection.execute(
+                text("INSERT INTO my_model (name) VALUES (:name)"),
+                [{'name': name} for name, in data]
+            )
+
+        # 插入单条数据
+        data = {'name': 'Single Object'}
+
+        # 使用原生 SQL 插入单条数据
+        with self.mysql_server.connect() as connection:
+            connection.execute(
+                text("INSERT INTO my_model (name) VALUES (:name)"),
+                data
+            )
+
+        """
         pass
 
     def error_callback(self, failure):

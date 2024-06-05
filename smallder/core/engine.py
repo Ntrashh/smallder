@@ -1,5 +1,6 @@
 import json
 import os
+import queue
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
@@ -12,11 +13,13 @@ from smallder.core.item import Item
 from smallder.core.middleware import MiddlewareManager
 from smallder.core.scheduler import SchedulerFactory
 from smallder.core.statscollectors import MemoryStatsCollector
+from typing_extensions import Dict
 
 
 class Engine:
     stats = MemoryStatsCollector()
     fastapi_manager = FastAPIWrapper()
+    item_que = queue.Queue()
     futures = deque()
 
     def __init__(self, spider, **kwargs):
@@ -78,9 +81,18 @@ class Engine:
                 self.spider.log.exception(process_error)
 
     @stats.handler
-    def process_item(self, item=Item):
+    def process_item(self, item: [Item, Dict, None]):
         try:
-            self.spider.pipline(item)
+            if self.spider.pipline_mode == "single":
+                self.spider.pipline(item)
+            else:
+                if self.item_que.qsize() > self.spider.pipline_batch or item is None:
+                    items = []
+                    while self.item_que.empty():
+                        items.append(self.item_que.get())
+                    self.spider.pipline(items)
+                if item is not None:
+                    self.item_que.put(item)
         except Exception as e:
             self.spider.log.exception(f"{item} 入库出现错误 \n {e}")
 
@@ -115,6 +127,9 @@ class Engine:
                     rounds = 0
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
+            else:
+                self.process_item(item=None)
+
         self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
     def debug(self):
@@ -141,7 +156,8 @@ class Engine:
                 rounds = 0
             except Exception as e:
                 self.spider.log.exception(f"调度引擎出现错误 \n {e}")
-
+        else:
+            self.process_item(item=None)
         return self.spider
 
     def process_func(self, task):
