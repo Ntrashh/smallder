@@ -6,12 +6,11 @@ from smallder.core.engine import Engine
 
 
 class Spider:
-    signal_manager = CustomSignalManager()
+    signal_manager = CustomSignalManager()  # 爬虫信号 可自定义
     name = "base"
     fastapi = True  # 控制内部统计api的数据
     server = None  # redis连接server
     mysql_server = None  # mysql链接server
-    # redis_url = ""  # redis连接信息
     batch_size = 0  # 批次从redis中获取多少数据
     redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
@@ -22,14 +21,13 @@ class Spider:
     pipline_mode = "single"  # 两种模式 single代表单条入库,list代表多条入库
     pipline_batch = 100  # 只有在pipline_mode=list时生效,代表多少条item进入pipline,默认100
     custom_settings = {
-        "middleware_settings": {
-            # "middleware.xxxx.xxx.xxxx": 100,
-            # "middleware.xxxx.xxxx.xxxxxx": 500,
-        },
-        "dupfilter_class": "",  # "dupfilter.xxxxx.xxxxxx",
-        "scheduler_class": "",  # "scheduler.xxxxx.xxxxxx"
-        "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
-        "redis": ""
+        # "middleware_settings": {
+        # "middleware.xxxx.xxx.xxxx": 100,数字越低越优先
+        # },
+        # "dupfilter_class": "",  # 设置自定义去重 "dupfilter.xxxxx.xxxxxx",
+        # "scheduler_class": "",  # 设置自定义调度 "scheduler.xxxxx.xxxxxx"
+        # "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
+        # "redis": ""
     }  # 定制配置
 
     def connect_start_signal(self, func):
@@ -43,7 +41,7 @@ class Spider:
         self.setup_mysql()
 
     def setup_redis(self):
-        redis_url = self.custom_settings["redis"]
+        redis_url = self.custom_settings.get("redis","")
         if self.server is not None:
             return
         if not (

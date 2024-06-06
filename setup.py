@@ -65,4 +65,5 @@ setup(
     zip_safe=False,
     classifiers=[
     ],
+    entry_points={"console_scripts": ["smallder = smallder.commands.cmdline:execute"]},
 )

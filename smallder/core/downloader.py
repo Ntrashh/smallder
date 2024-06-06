@@ -19,7 +19,6 @@ class Downloader:
         @param retry_time:
         @type request: Request
         """
-        retry_time = request.retry or retry_time
         retries = Retry(
             total=retry_time,
             backoff_factor=0.1,
