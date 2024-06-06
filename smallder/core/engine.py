@@ -96,7 +96,7 @@ class Engine:
                 self.spider.log.exception(process_error)
 
     @stats.handler
-    def process_item(self, item: [Item, Dict, None]):
+    def process_item(self, item=None):
         try:
             if self.spider.pipline_mode == "single" and item is not None:
                 self.spider.pipline(item)
@@ -154,7 +154,7 @@ class Engine:
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
             else:
-                self.process_item(item=None)
+                self.process_item()
 
         self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
@@ -183,7 +183,7 @@ class Engine:
             except Exception as e:
                 self.spider.log.exception(f"调度引擎出现错误 \n {e}")
         else:
-            self.process_item(item=None)
+            self.process_item()
         return self.spider
 
     def process_func(self, task):

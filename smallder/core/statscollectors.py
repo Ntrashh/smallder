@@ -22,13 +22,15 @@ class StatsCollector:
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
             key = stats_mapping.get(func.__name__)
+            if len(args) == 1:
+                return result
+            parma = args[1]
             if key == "response":
-                response = args[1]
-                status_code_key = f"status_code_{response.status_code}"
+                status_code_key = f"status_code_{parma.status_code}"
                 self.inc_value(status_code_key)
-            self.inc_value(key)
+            if parma:
+                self.inc_value(key)
             return result
-
         return wrapper
 
     def get_value(
