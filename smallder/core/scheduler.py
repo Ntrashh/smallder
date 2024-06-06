@@ -28,6 +28,9 @@ class Scheduler:
     def empty(self):
         pass
 
+    def add_failed_job(self, job, block=False):
+        pass
+
     def filter_request(self, job):
         """
         过滤任务，如果是request并且需要去重就进行过滤
@@ -67,11 +70,13 @@ class RedisScheduler(Scheduler):
         super().__init__(spider, dup_filter)
         self.spider = spider
         self.server = spider.server
-        self.request_key = f"{self.spider.redis_task_key}:request"
+        self.request_key = self.spider.redis_task_key if self.spider.redis_task_key else f"{self.spider.name}:request"
+        self.fail_request_key = f"{self.spider.redis_task_key}:fail_request" \
+            if self.spider.redis_task_key else f"{self.spider.name}:fail_request"
         self.batch_size = self.spider.batch_size or 10
 
     def _request_from_dict(self, d):
-        return request_from_dict(d,self.spider)
+        return request_from_dict(d, self.spider)
 
     def pop_redis_to_queue(self, redis_key):
         datas = self.pop_list_queue(redis_key, self.batch_size)
@@ -92,7 +97,7 @@ class RedisScheduler(Scheduler):
             self.spider.log.exception(e)
 
     def add_job(self, job, block=False):
-        if isinstance(job, Request):
+        if isinstance(job, Request) and self.spider.save_failed_request:
             try:
                 _str = json.dumps(job.to_dict(self.spider))
                 self.server.rpush(self.request_key, _str.encode())
@@ -100,6 +105,14 @@ class RedisScheduler(Scheduler):
                 self.spider.log.exception(e)
         else:
             self.queue.put(job)
+
+    def add_failed_job(self, job, block=False):
+        if isinstance(job, Request):
+            try:
+                _str = json.dumps(job.to_dict(self.spider))
+                self.server.rpush(self.fail_request_key, _str.encode())
+            except Exception as e:
+                self.spider.log.exception(e)
 
     def pop_list_queue(self, redis_key, batch_size):
         with self.server.pipeline() as pipe:

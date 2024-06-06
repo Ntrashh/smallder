@@ -48,5 +48,5 @@ class Downloader:
         if request.fetch:
             response = request.fetch(request)
         else:
-            response = self.fetch(request, self.spider.retry)
+            response = self.fetch(request)
         return response

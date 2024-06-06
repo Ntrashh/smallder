@@ -5,7 +5,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
-from smallder import Request
+from requests import RequestException
 from smallder.api.app import FastAPIWrapper
 from smallder.core.downloader import Downloader
 from smallder.core.failure import Failure
@@ -60,10 +60,25 @@ class Engine:
             self.scheduler.add_job(response)
         except Exception as e:
             process_error = self.process_callback_error(e=e, request=request)
-            if isinstance(process_error, BaseException):
-                self.spider.log.exception(process_error)
-            elif isinstance(process_error, Request):
-                self.scheduler.add_job(process_error)
+            if not isinstance(process_error, BaseException):
+                raise Exception("err_callback function must return Exception")
+            self.spider.log.exception(process_error)
+            # 这里还是要处理重试的问题
+            if isinstance(e, RequestException):
+                # 如果是request引发的问题就需要处理
+                if request.retry + 1 < self.spider.max_retry:
+                    request.retry += 1
+                    request.dont_filter = True
+                    self.scheduler.add_job(request)
+                else:
+                    fail_request = request.replace(retry=0, dont_filter=False)
+                    self.scheduler.add_failed_job(job=fail_request)
+                self.spider.log.info(
+                    f"""
+                    request : {request}
+                    重试次数 : {request.retry}
+                    最大允许重试次数 : {self.spider.max_retry}"""
+                )
 
     @stats.handler
     def process_response(self, response=None):

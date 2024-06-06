@@ -11,13 +11,14 @@ class Spider:
     fastapi = True  # 控制内部统计api的数据
     server = None  # redis连接server
     mysql_server = None  # mysql链接server
-    redis_url = ""  # redis连接信息
+    # redis_url = ""  # redis连接信息
     batch_size = 0  # 批次从redis中获取多少数据
     redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
     log = logger
     thread_count = 0  # 线程总数
-    retry: int = 3  # 重试次数
+    max_retry: int = 10  # 重试次数
+    save_failed_request = False  # 保存错误请求到redis
     pipline_mode = "single"  # 两种模式 single代表单条入库,list代表多条入库
     pipline_batch = 100  # 只有在pipline_mode=list时生效,代表多少条item进入pipline,默认100
     custom_settings = {
@@ -28,6 +29,7 @@ class Spider:
         "dupfilter_class": "",  # "dupfilter.xxxxx.xxxxxx",
         "scheduler_class": "",  # "scheduler.xxxxx.xxxxxx"
         "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
+        "redis": ""
     }  # 定制配置
 
     def connect_start_signal(self, func):
@@ -41,21 +43,22 @@ class Spider:
         self.setup_mysql()
 
     def setup_redis(self):
+        redis_url = self.custom_settings["redis"]
         if self.server is not None:
             return
         if not (
-                self.redis_url.startswith("redis://")
-                or self.redis_url.startswith("rediss://")
-                or self.redis_url.startswith("unix://")
+                redis_url.startswith("redis://")
+                or redis_url.startswith("rediss://")
+                or redis_url.startswith("unix://")
         ):
             return
-        self.server = from_redis_setting(self.redis_url)
+        self.server = from_redis_setting(redis_url)
 
     def setup_mysql(self):
-        db_url = self.custom_settings.get("mysql", "")
-        if not db_url:
+        mysql_url = self.custom_settings.get("mysql", "")
+        if not mysql_url:
             return
-        self.mysql_server = from_mysql_setting(db_url)
+        self.mysql_server = from_mysql_setting(mysql_url)
 
     def setup(self):
         """
