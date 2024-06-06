@@ -76,7 +76,6 @@ class CreateCommand:
         template_path = os.path.abspath(
             os.path.join(__file__, "../../templates", template_file)
         )
-        print("template_path",template_path)
         if os.path.exists(template_path):
             return template_path
         print("Unable to find template: %s\n" % template)
