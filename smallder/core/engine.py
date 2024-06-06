@@ -109,7 +109,9 @@ class Engine:
         # 如果队列中的项目数量超过批处理大小或者item为None，处理队列中的所有项目
         if self.item_que.qsize() > self.spider.pipline_batch or item is None:
             items = self.collect_items_from_queue()
-            self.spider.pipline(items)
+            if items:
+                self.spider.pipline(items)
+
         # 如果item不为None，将其加入队列
         if item is not None:
             self.item_que.put(item)
