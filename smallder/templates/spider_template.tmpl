@@ -7,7 +7,7 @@ class ${spider_class_name}(Spider):
     redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
     max_retry: int = 10  # 重试次数
-    # pipline_mode = "List"  # 两种模式 single代表单条入库,list代表多条入库 默认为single
+    # pipline_mode = "list"  # 两种模式 single代表单条入库,list代表多条入库 默认为single
     # thread_count = 0       # 线程总数 默认为cpu核心数两倍线程
     # batch_size = 0         # 批次从redis中获取多少数据 不使用redis不需要次参数
     # pipline_batch = 100    # 只有在pipline_mode=list时生效,代表多少条item进入pipline,默认100

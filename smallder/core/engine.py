@@ -125,13 +125,15 @@ class Engine:
     def engine(self):
         rounds = 0
         with ThreadPoolExecutor(max_workers=self.default_thread_count) as executor:
-            end = 600 if self.spider.server else 10
+            end = 60 if self.spider.server else 10
             while rounds < end:
                 try:
                     if len(self.futures) > self.default_thread_count * 20:
                         time.sleep(0.1)
                         continue
                     if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
+                        if not self.item_que.empty():
+                            self.process_item()
                         time.sleep(0.1)
                         rounds += 1
                     if self.start_requests is not None:
@@ -153,8 +155,7 @@ class Engine:
                     rounds = 0
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
-            else:
-                self.process_item()
+
 
         self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
@@ -163,6 +164,8 @@ class Engine:
         while rounds < 6:
             try:
                 if self.scheduler.empty() and self.start_requests is None:
+                    if not self.item_que.empty():
+                        self.process_item()
                     time.sleep(0.2)
                     rounds += 1
                 if self.start_requests is not None:
@@ -182,8 +185,6 @@ class Engine:
                 rounds = 0
             except Exception as e:
                 self.spider.log.exception(f"调度引擎出现错误 \n {e}")
-        else:
-            self.process_item()
         return self.spider
 
     def process_func(self, task):
