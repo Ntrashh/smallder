@@ -97,21 +97,29 @@ class Engine:
 
     @stats.handler
     def process_item(self, item=None):
+        if self.spider.pipline_mode == "single" and item is not None:
+            self.handle_single(item)
+        else:
+            self.handle_batch(item)
+
+    def handle_single(self, item):
         try:
-            if self.spider.pipline_mode == "single" and item is not None:
-                self.spider.pipline(item)
-            else:
-                self.handle_batch(item)
+            self.spider.pipline(item)
         except Exception as e:
             self.spider.log.exception(f"{item} 入库出现错误 \n {e}")
 
     def handle_batch(self, item):
         # 如果队列中的项目数量超过批处理大小或者item为None，处理队列中的所有项目
-        if self.item_que.qsize() > self.spider.pipline_batch or item is None:
+        if self.item_que.qsize() >= self.spider.pipline_batch or item is None:
             items = self.collect_items_from_queue()
             if items:
-                self.spider.pipline(items)
-
+                try:
+                    self.spider.pipline(items)
+                except Exception as e:
+                    self.spider.log.exception(f"{items} 入库出现错误 \n {e}")
+                self.spider.log.success(
+                    f"pipline 处理 {len(items)} 条数据 : {json.dumps(items, ensure_ascii=False)[0:100]}"
+                )
         # 如果item不为None，将其加入队列
         if item is not None:
             self.item_que.put(item)
@@ -155,7 +163,6 @@ class Engine:
                     rounds = 0
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
-
 
         self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
