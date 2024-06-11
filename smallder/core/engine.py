@@ -6,6 +6,8 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 from requests import RequestException
+
+from smallder.core.error import RetryException, DiscardException
 from smallder.api.app import FastAPIWrapper
 from smallder.core.downloader import Downloader
 from smallder.core.failure import Failure
@@ -58,27 +60,15 @@ class Engine:
             response = self.download.download(middleware_manager_request)
             self.spider.log.info(response)
             self.scheduler.add_job(response)
-        except Exception as e:
-            process_error = self.process_callback_error(e=e, request=request)
-            if not isinstance(process_error, BaseException):
-                raise Exception("err_callback function must return Exception")
-            self.spider.log.exception(process_error)
-            # 这里还是要处理重试的问题
-            if isinstance(e, RequestException):
-                # 如果是request引发的问题就需要处理
-                if request.retry + 1 < self.spider.max_retry:
-                    request.retry += 1
-                    request.dont_filter = True
-                    self.scheduler.add_job(request)
-                else:
-                    fail_request = request.replace(retry=0, dont_filter=False)
-                    self.scheduler.add_failed_job(job=fail_request)
-                self.spider.log.info(
-                    f"""
-                    request : {request}
-                    重试次数 : {request.retry}
-                    最大允许重试次数 : {self.spider.max_retry}"""
-                )
+        except BaseException as e:
+            self.spider.log.exception(e)
+            if isinstance(e, DiscardException):
+                self.spider.log.warning(f"{request} 请求被丢弃!")
+                # 这里还是要处理重试的问题
+            elif isinstance(e, (RequestException, RetryException)):
+                self.handler_request_retry(request)
+            else:
+                self.process_callback_error(e=e, request=request)
 
     @stats.handler
     def process_response(self, response=None):
@@ -90,10 +80,14 @@ class Engine:
                 return
             for _iter in _iters:
                 self.scheduler.add_job(_iter, block=False)
-        except Exception as e:
-            process_error = self.process_callback_error(e=e, request=response.request, response=response)
-            if isinstance(process_error, BaseException):
-                self.spider.log.exception(process_error)
+        except BaseException as e:
+            self.spider.log.exception(e)
+            if isinstance(e, DiscardException):
+                self.spider.log.warning(f"{response} 被丢弃!")
+            elif isinstance(e, RetryException):
+                self.handler_request_retry(response.request)
+            else:
+                self.process_callback_error(e=e, request=response.request, response=response)
 
     @stats.handler
     def process_item(self, item=None):
@@ -115,11 +109,11 @@ class Engine:
             if items:
                 try:
                     self.spider.pipline(items)
+                    self.spider.log.success(
+                        f"pipline 处理 {len(items)} 条数据 : {json.dumps(items, ensure_ascii=False)[0:100]}"
+                    )
                 except Exception as e:
                     self.spider.log.exception(f"{items} 入库出现错误 \n {e}")
-                self.spider.log.success(
-                    f"pipline 处理 {len(items)} 条数据 : {json.dumps(items, ensure_ascii=False)[0:100]}"
-                )
         # 如果item不为None，将其加入队列
         if item is not None:
             self.item_que.put(item)
@@ -129,6 +123,23 @@ class Engine:
         while not self.item_que.empty():
             items.append(self.item_que.get())
         return items
+
+    def handler_request_retry(self, request):
+        # 如果是request引发的问题就需要处理
+        if request.retry + 1 < self.spider.max_retry:
+            request.retry += 1
+            request.dont_filter = True
+            self.scheduler.add_job(request)
+        else:
+            fail_request = request.replace(retry=0, dont_filter=False)
+            self.scheduler.add_failed_job(job=fail_request)
+        self.spider.log.info(
+            f"""
+           {request}
+           重试次数 : {request.retry}
+           最大允许重试次数 : {self.spider.max_retry}
+           """
+        )
 
     def engine(self):
         rounds = 0
