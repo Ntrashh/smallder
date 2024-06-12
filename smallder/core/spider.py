@@ -1,3 +1,5 @@
+import os
+
 from loguru import logger
 from smallder import Request
 from smallder.core.connection import from_redis_setting, from_mysql_setting
@@ -15,7 +17,7 @@ class Spider:
     redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
     log = logger
-    thread_count = 0  # 线程总数
+    thread_count = os.cpu_count() * 2  # 线程总数
     max_retry: int = 10  # 重试次数
     save_failed_request = False  # 保存错误请求到redis
     pipline_mode = "single"  # 两种模式 single代表单条入库,list代表多条入库

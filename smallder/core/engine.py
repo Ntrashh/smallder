@@ -30,7 +30,6 @@ class Engine:
         self.download = Downloader(self.spider)
         self.middleware_manager = MiddlewareManager(self.spider)
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
-        self.default_thread_count = self.spider.thread_count if self.spider.thread_count else os.cpu_count() * 2
         self.start_requests = iter(self.spider.start_request())
         self.setup_signals()
 
@@ -143,11 +142,11 @@ class Engine:
 
     def engine(self):
         rounds = 0
-        with ThreadPoolExecutor(max_workers=self.default_thread_count) as executor:
+        with ThreadPoolExecutor(max_workers=self.spider.thread_count) as executor:
             end = 60 if self.spider.server else 10
             while rounds < end:
                 try:
-                    if len(self.futures) > self.default_thread_count * 20:
+                    if len(self.futures) > self.spider.thread_count * 10:
                         time.sleep(0.1)
                         continue
                     if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
