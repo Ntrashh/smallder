@@ -14,7 +14,7 @@ class Scheduler:
 
     def __init__(self, spider, dup_filter: Filter):
         self.spider = spider
-        self.batch_size = self.spider.batch or self.spider.thread_count * 10
+        self.batch_size = self.spider.batch_size or self.spider.thread_count * 10
         self.dup_filter = dup_filter
 
     def next_job(self, block=False):

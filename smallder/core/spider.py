@@ -1,4 +1,5 @@
 import os
+from collections import deque
 
 from loguru import logger
 from smallder import Request
@@ -8,6 +9,7 @@ from smallder.core.engine import Engine
 
 
 class Spider:
+    __futures = deque()
     signal_manager = CustomSignalManager()  # 爬虫信号 可自定义
     name = "base"
     fastapi = True  # 控制内部统计api的数据
@@ -31,6 +33,10 @@ class Spider:
         # "mysql": "",  # "mysql://xxx:xxxxx@host:port/db_name"
         # "redis": ""
     }  # 定制配置
+
+    @property
+    def futures(self):
+        return self.__futures
 
     def connect_start_signal(self, func):
         self.signal_manager.connect("SPIDER_STARTED", func)

@@ -1,28 +1,22 @@
 import json
-import os
 import queue
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
-from collections import deque
 from requests import RequestException
-
 from smallder.core.error import RetryException, DiscardException
 from smallder.api.app import FastAPIWrapper
 from smallder.core.downloader import Downloader
 from smallder.core.failure import Failure
-from smallder.core.item import Item
 from smallder.core.middleware import MiddlewareManager
 from smallder.core.scheduler import SchedulerFactory
 from smallder.core.statscollectors import MemoryStatsCollector
-from typing_extensions import Dict
 
 
 class Engine:
     stats = MemoryStatsCollector()
     fastapi_manager = FastAPIWrapper()
     item_que = queue.Queue()
-    futures = deque()
 
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
@@ -34,18 +28,21 @@ class Engine:
         self.setup_signals()
 
     def setup_signals(self):
-        # 在这里注册爬虫开始
+        # 注册爬虫开始信号
         self.spider.connect_start_signal(self.middleware_manager.load_middlewares)
         self.spider.connect_start_signal(self.spider.setup)
         self.spider.connect_start_signal(self.stats.on_spider_start)
         if self.spider.fastapi:
             self.spider.connect_start_signal(self.fastapi_manager.run)
-        # 在这里注册爬虫结束的信号
+
+        # 注册爬虫状态信号
+        # self.spider.signal_manager.
+        # 注册爬虫结束信号
         self.spider.connect_stop_signal(self.stats.on_spider_stopped)
 
     def future_done(self, future):
         try:
-            self.futures.remove(future)
+            self.spider.futures.remove(future)
         except ValueError as e:
             self.spider.log.warning(e)  # Future 已经被移除
 
@@ -146,10 +143,10 @@ class Engine:
             end = 60 if self.spider.server else 10
             while rounds < end:
                 try:
-                    if len(self.futures) > self.spider.thread_count * 10:
+                    if len(self.spider.futures) > self.spider.thread_count * 10:
                         time.sleep(0.1)
                         continue
-                    if not len(self.futures) and self.scheduler.empty() and self.start_requests is None:
+                    if not len(self.spider.futures) and self.scheduler.empty() and self.start_requests is None:
                         if not self.item_que.empty():
                             self.process_item()
                         time.sleep(0.1)
@@ -168,13 +165,13 @@ class Engine:
                         continue
                     process_func = self.process_func(task)
                     future = executor.submit(process_func, task)
-                    self.futures.append(future)
+                    self.spider.futures.append(future)
                     future.add_done_callback(self.future_done)
                     rounds = 0
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
 
-        self.spider.log.info(f"任务池数量:{len(self.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+        self.spider.log.info(f"任务池数量:{len(self.spider.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
 
     def debug(self):
         rounds = 0
@@ -228,7 +225,7 @@ class Engine:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.spider.log.info(
-            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.futures)},任务队列是否为空:{self.scheduler.empty()} ")
+            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.spider.futures)},任务队列是否为空:{self.scheduler.empty()} ")
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.spider.signal_manager.send("SPIDER_STOPPED")
