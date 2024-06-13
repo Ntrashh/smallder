@@ -43,7 +43,7 @@ class Spider:
         self.setup_mysql()
 
     def setup_redis(self):
-        redis_url = self.custom_settings.get("redis","")
+        redis_url = self.custom_settings.get("redis", "")
         if self.server is not None:
             return
         if not (
@@ -62,7 +62,7 @@ class Spider:
 
     def setup(self):
         """
-        引擎开始启动的时候会通知到这里,这里可以做一些自定义设置
+        引擎开始启动的时候会通知到这里,这里可以做一些自定义设置或者注册信号
         @return:
         """
         pass

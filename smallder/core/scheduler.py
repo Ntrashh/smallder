@@ -42,6 +42,9 @@ class Scheduler:
             return not self.dup_filter.request_seen(job)
         return True
 
+    def __repr__(self):
+        return f"<Scheduler with {self.size()} tasks>"
+
 
 class MemoryScheduler(Scheduler):
 

@@ -71,12 +71,12 @@ class Response:
             return self.content.decode(encoding)
         except UnicodeDecodeError:
             try:
-                encoding = self._auto_char_code()
+                encoding = self._auto_char_code() or "utf-8"
                 return self.content.decode(encoding, errors="ignore")
             except UnicodeDecodeError:
-                raise UnicodeDecodeError(f"{encoding}  codec can't decode")
+                raise UnicodeDecodeError(f"{encoding} codec can't decode")
             except TypeError:
-                raise UnicodeDecodeError(f"  codec can't decode")
+                raise UnicodeDecodeError("codec can't decode")
 
     @property
     def ok(self):
