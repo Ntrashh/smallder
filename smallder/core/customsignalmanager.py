@@ -8,7 +8,8 @@ class CustomSignalManager:
     def __init__(self):
         self.custom_signals = {
             "SPIDER_STARTED": "SPIDER_STARTED",
-            "SPIDER_STOPPED": "SPIDER_STOPPED"
+            "SPIDER_STOPPED": "SPIDER_STOPPED",
+            "SPIDER_STATS": "SPIDER_STATS"
         }
 
     def register_signal(self, signal_name):

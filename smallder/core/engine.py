@@ -14,13 +14,13 @@ from smallder.core.statscollectors import MemoryStatsCollector
 
 
 class Engine:
-    stats = MemoryStatsCollector()
-    fastapi_manager = FastAPIWrapper()
     item_que = queue.Queue()
 
     def __init__(self, spider, **kwargs):
         self.spider = spider(**kwargs)
         self.spider.setup_server()
+        self.fastapi_manager = FastAPIWrapper(spider=self.spider)
+        self.stats_collector = MemoryStatsCollector(self.spider)
         self.download = Downloader(self.spider)
         self.middleware_manager = MiddlewareManager(self.spider)
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
@@ -31,14 +31,15 @@ class Engine:
         # 注册爬虫开始信号
         self.spider.connect_start_signal(self.middleware_manager.load_middlewares)
         self.spider.connect_start_signal(self.spider.setup)
-        self.spider.connect_start_signal(self.stats.on_spider_start)
+        self.spider.connect_start_signal(self.stats_collector.on_spider_start)
         if self.spider.fastapi:
             self.spider.connect_start_signal(self.fastapi_manager.run)
 
         # 注册爬虫状态信号
-        # self.spider.signal_manager.
+        self.spider.signal_manager.connect("SPIDER_STATS", self.stats_collector.handler)
+
         # 注册爬虫结束信号
-        self.spider.connect_stop_signal(self.stats.on_spider_stopped)
+        self.spider.connect_stop_signal(self.stats_collector.on_spider_stopped)
 
     def future_done(self, future):
         try:
@@ -46,8 +47,7 @@ class Engine:
         except ValueError as e:
             self.spider.log.warning(e)  # Future 已经被移除
 
-    @stats.handler
-    def process_request(self, request=None):
+    def process_request(self, request: any = None):
         try:
             middleware_manager_request = self.middleware_manager.process_request(request)
             download_middleware_request = self.spider.download_middleware(middleware_manager_request)
@@ -66,8 +66,7 @@ class Engine:
             else:
                 self.process_callback_error(e=e, request=request)
 
-    @stats.handler
-    def process_response(self, response=None):
+    def process_response(self, response: any = None):
         try:
             response = self.middleware_manager.process_response(response)
             callback = response.request.callback or getattr(self.spider, "error_callback", None)
@@ -85,20 +84,19 @@ class Engine:
             else:
                 self.process_callback_error(e=e, request=response.request, response=response)
 
-    @stats.handler
-    def process_item(self, item=None):
+    def process_item(self, item: any = None):
         if self.spider.pipline_mode == "single" and item is not None:
-            self.handle_single(item)
+            self.store_single(item)
         else:
-            self.handle_batch(item)
+            self.store_batch(item)
 
-    def handle_single(self, item):
+    def store_single(self, item):
         try:
             self.spider.pipline(item)
         except Exception as e:
             self.spider.log.exception(f"{item} 入库出现错误 \n {e}")
 
-    def handle_batch(self, item):
+    def store_batch(self, item):
         # 如果队列中的项目数量超过批处理大小或者item为None，处理队列中的所有项目
         if self.item_que.qsize() >= self.spider.pipline_batch or item is None:
             items = self.collect_items_from_queue()
@@ -138,6 +136,7 @@ class Engine:
         )
 
     def engine(self):
+        _time = time.time()
         rounds = 0
         with ThreadPoolExecutor(max_workers=self.spider.thread_count) as executor:
             end = 60 if self.spider.server else 10
@@ -157,8 +156,6 @@ class Engine:
                             self.scheduler.add_job(task)
                         except StopIteration:
                             self.start_requests = None
-                        except Exception:
-                            self.start_requests = None
                     task = self.scheduler.next_job()
                     if task is None:
                         time.sleep(0.01)
@@ -168,6 +165,10 @@ class Engine:
                     self.spider.futures.append(future)
                     future.add_done_callback(self.future_done)
                     rounds = 0
+                    # if time.time() - _time < 1:
+                    #     continue
+                    # _time = time.time()
+                    # self.spider.signal_manager.send("SPIDER_STATS")
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
 
@@ -188,8 +189,7 @@ class Engine:
                         self.scheduler.add_job(task)
                     except StopIteration:
                         self.start_requests = None
-                    except Exception:
-                        self.start_requests = None
+
                 task = self.scheduler.next_job()
                 if task is None:
                     time.sleep(0.1)
@@ -212,6 +212,7 @@ class Engine:
         func = func_dict.get(cls_name)
         if func is None:
             raise ValueError(f"{task} does not exist")
+        self.spider.signal_manager.send(signal_name="SPIDER_STATS", task=task)
         return func
 
     def process_callback_error(self, e, request, response=None):
@@ -229,4 +230,5 @@ class Engine:
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.spider.signal_manager.send("SPIDER_STOPPED")
-        self.spider.log.success(f"Spider Close : {json.dumps(self.stats.get_stats(), ensure_ascii=False, indent=4)}")
+        self.spider.log.success(
+            f"Spider Close : {json.dumps(self.stats_collector.get_stats(), ensure_ascii=False, indent=4)}")

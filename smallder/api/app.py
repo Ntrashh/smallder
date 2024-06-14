@@ -7,11 +7,11 @@ from smallder.core.statscollectors import MemoryStatsCollector
 
 
 class FastAPIWrapper:
-    def __init__(self, host="0.0.0.0", port=8000):
+    def __init__(self, host="0.0.0.0", port=8000, spider=None):
         self.app = FastAPI()
         self.host = host
         self.port = port
-        self._status = MemoryStatsCollector()
+        self._status = MemoryStatsCollector(spider)
         # 将路由添加到FastAPI应用
         self.app.add_api_route("/status", self.get_status, methods=["GET"])
         self.app.add_api_route("/running", self.running, methods=["GET"])

@@ -1,4 +1,5 @@
 import importlib
+import json
 import time
 from typing import Any, Dict
 from smallder.utils.utils import singleton
@@ -7,31 +8,25 @@ StatsT = Dict[str, Any]
 
 
 class StatsCollector:
-    def __init__(self):
+    def __init__(self, spider):
         self._stats: StatsT = {}
+        self._cache_stats = {}
         self._start_time = time.time()
-        # self.spider = spider
+        self.start_period = time.time()
+        self.spider = spider
 
-    def handler(self, func):
-        stats_mapping = {
-            "process_request": "request",
-            "process_response": "response",  # assuming the second condition was meant for 'process_response'
-            "process_item": "item"
-        }
+    def handler(self, task=None):
 
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            key = stats_mapping.get(func.__name__)
-            if len(args) == 1:
-                return result
-            parma = args[1]
-            if key == "response":
-                status_code_key = f"status_code_{parma.status_code}"
-                self.inc_value(status_code_key)
-            if parma:
-                self.inc_value(key)
-            return result
-        return wrapper
+        cls_name = type(task).__name__.lower()
+        if cls_name == "response":
+            status_code_key = f"status_code_{task.status_code}"
+            self.inc_value(status_code_key)
+        if cls_name:
+            self.inc_value(cls_name)
+        if time.time() - self.start_period > 60:
+            self.spider.log.info(f"当前任务池任务:{len(self.spider.futures)} {json.dumps(self._cache_stats,ensure_ascii=False,indent=4)}")
+            self._stats.clear()
+            self.start_period = time.time()
 
     def get_value(
             self, key: str, default: Any = None) -> Any:
@@ -51,6 +46,7 @@ class StatsCollector:
     ) -> None:
         d = self._stats
         d[key] = d.setdefault(key, start) + count
+        self._cache_stats[key] = self._cache_stats.setdefault(key, start) + count
 
     def max_value(self, key: str, value: Any) -> None:
         self._stats[key] = max(self._stats.setdefault(key, value), value)
@@ -72,11 +68,10 @@ class StatsCollector:
         self.set_value("time", time.time() - self._start_time)
 
 
+
+
 @singleton
 class MemoryStatsCollector(StatsCollector):
-    def __init__(self):
-        super().__init__()
-        self.spider_stats: Dict[str, StatsT] = {}
 
     def _persist_stats(self, stats: StatsT, spider) -> None:
         self.spider_stats[spider.name] = stats
