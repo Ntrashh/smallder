@@ -30,20 +30,20 @@ class Response:
         self.cookies = cookies or {}
         self.elapsed = elapsed
 
-    def __str__(self):
-        parts = ["Response("]
+    def __repr__(self):
+        parts = ["<Response"]
         if self.status_code is not None:
-            parts.append(f"    status_code = {self.status_code},")
+            parts.append(f" status_code = {self.status_code},")
 
         if self.url is not None:
-            parts.append(f"    url = '{self.url}',")
+            parts.append(f" url = '{self.url}'")
 
         if self.referer:
-            parts.append(f"    referer = '{self.referer}',")
+            parts.append(f" referer = '{self.referer}'")
 
-        parts.append(")")
+        parts.append(">")
 
-        return "\n".join(parts)
+        return "".join(parts)
 
     @property
     def meta(self):

@@ -106,29 +106,29 @@ class Request:
         request_kwargs.update(kwargs)
         return cls(**request_kwargs)
 
-    def __str__(self):
-        parts = ["Request("]
+    def __repr__(self):
+        parts = ["<Request"]
         if self.method is not None:
-            parts.append(f"    method = '{self.method}',")
+            parts.append(f" method = '{self.method}',")
 
         if self.url is not None:
-            parts.append(f"    url = '{self.url}',")
+            parts.append(f" url = '{self.url}',")
 
         if self.params is not None:
-            parts.append(f"    params = {self.params},")
+            parts.append(f" params = {self.params},")
 
         if self.data is not None:
-            parts.append(f"    data = {self.data},")
+            parts.append(f" data = {self.data},")
 
         if self.cookies is not None:
-            parts.append(f"    cookies = {self.cookies},")
+            parts.append(f" cookies = {self.cookies},")
 
         callback_name = self.callback.__name__ if self.callback is not None else "None"
-        parts.append(f"    callback = {callback_name}")
+        parts.append(f" callback = {callback_name}")
 
-        parts.append(")")
+        parts.append(">")
 
-        return "\n".join(parts)
+        return "".join(parts)
 
     def copy(self) -> "Request":
         return self.replace()

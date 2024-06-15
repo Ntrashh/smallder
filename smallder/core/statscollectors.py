@@ -24,9 +24,15 @@ class StatsCollector:
         if cls_name:
             self.inc_value(cls_name)
         if time.time() - self.start_period > 60:
-            self.spider.log.info(f"当前任务池任务:{len(self.spider.futures)} {json.dumps(self._cache_stats,ensure_ascii=False,indent=4)}")
-            self._stats.clear()
+            log_str = [f"任务池数量 : {len(self.spider.futures)}"]
+            for key,value in self._cache_stats.items():
+                log_str.append(f"{key} : {value}/min")
+            self.spider.log.info("  ".join(log_str))
+            # self.spider.log.info( request : {self._cache_stats.get('request', 0)}/min")
+            self._cache_stats.clear()
             self.start_period = time.time()
+
+    # def log(self,):
 
     def get_value(
             self, key: str, default: Any = None) -> Any:
