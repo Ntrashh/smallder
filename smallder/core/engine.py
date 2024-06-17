@@ -142,6 +142,8 @@ class Engine:
             end = 60 if self.spider.server else 10
             while rounds < end:
                 try:
+                    if time.time() - _time > 30:
+                        self.spider.signal_manager.send(signal_name="SPIDER_STATS")
                     if len(self.spider.futures) > self.spider.thread_count * 10:
                         time.sleep(0.1)
                         continue

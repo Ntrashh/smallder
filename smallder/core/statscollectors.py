@@ -1,7 +1,6 @@
-import importlib
-import json
 import time
 from typing import Any, Dict
+
 from smallder.utils.utils import singleton
 
 StatsT = Dict[str, Any]
@@ -16,23 +15,21 @@ class StatsCollector:
         self.spider = spider
 
     def handler(self, task=None):
-
-        cls_name = type(task).__name__.lower()
-        if cls_name == "response":
-            status_code_key = f"status_code_{task.status_code}"
-            self.inc_value(status_code_key)
-        if cls_name:
+        if task is not None:
+            cls_name = type(task).__name__.lower()
+            if cls_name == "response":
+                status_code_key = f"status_code_{task.status_code}"
+                self.inc_value(status_code_key)
+            if isinstance(task, str):
+                cls_name = task
             self.inc_value(cls_name)
         if time.time() - self.start_period > 60:
             log_str = [f"任务池数量 : {len(self.spider.futures)}"]
-            for key,value in self._cache_stats.items():
+            for key, value in self._cache_stats.items():
                 log_str.append(f"{key} : {value}/min")
             self.spider.log.info("  ".join(log_str))
-            # self.spider.log.info( request : {self._cache_stats.get('request', 0)}/min")
             self._cache_stats.clear()
             self.start_period = time.time()
-
-    # def log(self,):
 
     def get_value(
             self, key: str, default: Any = None) -> Any:
@@ -74,10 +71,11 @@ class StatsCollector:
         self.set_value("time", time.time() - self._start_time)
 
 
-
-
 @singleton
 class MemoryStatsCollector(StatsCollector):
+
+    def __init__(self, spider):
+        super().__init__(spider)
 
     def _persist_stats(self, stats: StatsT, spider) -> None:
         self.spider_stats[spider.name] = stats

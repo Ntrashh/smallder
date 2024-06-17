@@ -73,6 +73,9 @@ class Spider:
         """
         pass
 
+    def inc_value(self, key_name):
+        self.signal_manager.send("SPIDER_STATS", task=key_name)
+
     def start_request(self):
         if not len(self.start_urls):
             raise AttributeError(
