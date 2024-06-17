@@ -165,10 +165,7 @@ class Engine:
                     self.spider.futures.append(future)
                     future.add_done_callback(self.future_done)
                     rounds = 0
-                    # if time.time() - _time < 1:
-                    #     continue
-                    # _time = time.time()
-                    # self.spider.signal_manager.send("SPIDER_STATS")
+                    self.spider.signal_manager.send(signal_name="SPIDER_STATS", task=task)
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
 
@@ -212,7 +209,6 @@ class Engine:
         func = func_dict.get(cls_name)
         if func is None:
             raise ValueError(f"{task} does not exist")
-        self.spider.signal_manager.send(signal_name="SPIDER_STATS", task=task)
         return func
 
     def process_callback_error(self, e, request, response=None):

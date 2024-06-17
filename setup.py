@@ -51,7 +51,7 @@ requires = [
     'urllib3>=1.25.10',
     'uvicorn>=0.27.1',
     'w3lib>=2.1.2',
-    'PyMySQL>=1.1.1'
+    'PyMySQL>=1.1.0'
 ]
 
 setup(
