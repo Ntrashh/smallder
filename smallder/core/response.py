@@ -1,6 +1,8 @@
 import json
 from json import JSONDecodeError
 from urllib.parse import urljoin
+from lxml import etree
+
 import chardet
 from smallder.utils.utils import guess_json_utf
 
@@ -115,3 +117,7 @@ class Response:
             kwargs.setdefault(x, getattr(self, x))
         cls = kwargs.pop("cls", self.__class__)
         return cls(*args, **kwargs)
+
+    @property
+    def root(self):
+        return etree.HTML(self.text)
