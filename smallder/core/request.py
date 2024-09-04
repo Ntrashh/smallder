@@ -1,5 +1,6 @@
 import inspect
 from typing import Tuple
+from urllib.parse import urlparse, urlencode, urlunparse
 
 from smallder.utils.curl import curl_to_request_kwargs
 
@@ -105,6 +106,17 @@ class Request:
         request_kwargs = curl_to_request_kwargs(curl_command)
         request_kwargs.update(kwargs)
         return cls(**request_kwargs)
+
+    def full_url(self):
+        """
+        返回url拼接params的完整字符串
+        """
+        params = self.params if self.params else ""
+        parsed_url = urlparse(self.url)
+        # 将参数字典转换为查询字符串
+        query_string = urlencode(params, doseq=True)
+        # 创建包含新查询字符串的完整URL
+        return urlunparse(parsed_url._replace(query=query_string))
 
     def __repr__(self):
         parts = ["<Request"]
