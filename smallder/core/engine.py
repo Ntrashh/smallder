@@ -69,7 +69,7 @@ class Engine:
     def process_response(self, response: any = None):
         try:
             response = self.middleware_manager.process_response(response)
-            callback = response.request.callback or getattr(self.spider, "error_callback", None)
+            callback = response.request.callback or getattr(self.spider, "parse", None)
             _iters = callback(response)
             if _iters is None:
                 return

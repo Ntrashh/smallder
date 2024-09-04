@@ -76,7 +76,7 @@ class Spider:
     def inc_value(self, key_name):
         self.signal_manager.send("SPIDER_STATS", task=key_name)
 
-    def start_request(self):
+    def start_requests(self):
         if not len(self.start_urls):
             raise AttributeError(
                 "Crawling could not start: 'start_urls' not found "
