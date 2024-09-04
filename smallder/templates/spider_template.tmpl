@@ -1,5 +1,5 @@
-from smallder import Spider
-
+from typing import Any
+from smallder import Spider, Request, Response
 
 class ${spider_class_name}(Spider):
     name = "${spider_name}"
@@ -21,10 +21,10 @@ class ${spider_class_name}(Spider):
     # def __init__(self, param):
     #     self.param = param
 
-    def parse(self, response):
+    def parse(self, response: Response) -> Any:
         self.log.info(response)
 
-    def download_middleware(self, request):
+    def download_middleware(self, request: Request) -> Request:
         request.headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/108.0.0.0 Safari/537.36"
