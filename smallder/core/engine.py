@@ -30,7 +30,7 @@ class Engine:
     def setup_signals(self):
         # 注册爬虫开始信号
         self.spider.connect_start_signal(self.middleware_manager.load_middlewares)
-        self.spider.connect_start_signal(self.spider.setup)
+        self.spider.connect_start_signal(self.spider.on_start)
         self.spider.connect_start_signal(self.stats_collector.on_spider_start)
         if self.spider.fastapi:
             self.spider.connect_start_signal(self.fastapi_manager.run)
@@ -40,6 +40,7 @@ class Engine:
 
         # 注册爬虫结束信号
         self.spider.connect_stop_signal(self.stats_collector.on_spider_stopped)
+        self.spider.connect_stop_signal(self.spider.on_stop)
 
     def future_done(self, future):
         try:

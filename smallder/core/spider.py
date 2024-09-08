@@ -66,13 +66,6 @@ class Spider:
             return
         self.mysql_server = from_mysql_setting(mysql_url)
 
-    def setup(self):
-        """
-        引擎开始启动的时候会通知到这里,这里可以做一些自定义设置或者注册信号
-        @return:
-        """
-        pass
-
     def inc_value(self, key_name):
         self.signal_manager.send("SPIDER_STATS", task=key_name)
 
@@ -125,6 +118,20 @@ class Spider:
             )
 
         """
+        pass
+
+    def on_start(self):
+        """
+       引擎结束时候会通知到这里,这里可以做一些自定义设置或者注册信号
+       @return:
+       """
+        pass
+
+    def on_stop(self):
+        """
+       引擎结束的时候会通知到这里,这里可以做一些自定义设置或者注册信号
+       @return:
+       """
         pass
 
     def error_callback(self, failure):
