@@ -45,49 +45,37 @@ def to_bytes(
 _fingerprint_cache = WeakKeyDictionary()
 
 
-def fingerprint(
-        request,
-        *,
-        include_headers: Optional[Iterable[Union[bytes, str]]] = None,
-        keep_fragments: bool = True,
-) -> bytes:
-    processed_include_headers: Optional[Tuple[bytes, ...]] = None
-    if include_headers:
-        processed_include_headers = tuple(
-            to_bytes(h.lower()) for h in sorted(include_headers)
-        )
+
+
+def process_data(data):
+    if isinstance(data, dict):
+        return json.dumps(data, sort_keys=True)
+    return data or ""
+
+def fingerprint(request, *, include_headers=None, keep_fragments=True):
+    processed_include_headers = tuple(
+        to_bytes(h.lower()) for h in sorted(include_headers)
+    ) if include_headers else None
+
     cache = _fingerprint_cache.setdefault(request, {})
     cache_key = (processed_include_headers, keep_fragments)
+
     if cache_key not in cache:
-        # To decode bytes reliably (JSON does not support bytes), regardless of
-        # character encoding, we use bytes.hex()
+        data = process_data(request.data)
+        _json = process_data(request.json)
+        params = process_data(request.params)
 
-        if isinstance(request.data, dict):
-            data = json.dumps(request.data)
-        elif request.data is None:
-            data = ""
-        else:
-            data = request.data
-
-        if isinstance(request.params, dict):
-            if request.params:
-                params = json.dumps(request.params)
-            else:
-                params = ""
-        elif request.params is None:
-            params = ""
-        else:
-            params = request.params
         fingerprint_data = {
             "method": to_unicode(request.method),
             "url": canonicalize_url(request.url, keep_fragments=keep_fragments),
-            "body": (data.encode() or b"").hex(),
+            "body": data.encode('utf-8').hex(),
+            "json": _json.encode('utf-8').hex(),
+            "params": params.encode('utf-8').hex(),
         }
-        if params:
-            fingerprint_data["params"] = (params.encode() or b"").hex()
 
         fingerprint_json = json.dumps(fingerprint_data, sort_keys=True)
         cache[cache_key] = hashlib.sha1(fingerprint_json.encode()).digest()
+
     return cache[cache_key]
 
 

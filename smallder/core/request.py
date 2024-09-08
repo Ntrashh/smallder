@@ -13,6 +13,7 @@ class Request:
         "headers",
         "params",
         "data",
+        "json",
         "cookies",
         "meta",
         "timeout",
@@ -37,6 +38,7 @@ class Request:
             headers=None,
             params=None,
             data=None,
+            json=None,
             cookies=None,
             timeout=5,
             callback=None,
@@ -56,6 +58,7 @@ class Request:
         self.params = params
         self.headers = headers
         self.data = data
+        self.json = json
         self.cookies = cookies
         self.timeout = timeout
         self.callback = callback
