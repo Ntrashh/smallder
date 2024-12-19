@@ -24,7 +24,7 @@ class Engine:
         self.download = Downloader(self.spider)
         self.middleware_manager = MiddlewareManager(self.spider)
         self.scheduler = SchedulerFactory.create_scheduler(self.spider)
-        self.start_requests = iter(self.spider.start_request())
+        self.start_requests = iter(self.spider.start_requests())
         self.setup_signals()
 
     def setup_signals(self):
@@ -172,7 +172,7 @@ class Engine:
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
 
-        self.spider.log.info(f"任务池数量:{len(self.spider.futures)},redis中任务是否为空:{self.scheduler.empty()} ")
+        self.spider.log.info(f"任务池数量:{len(self.spider.futures)},调度器中任务是否为空:{self.scheduler.empty()} ")
 
     def debug(self):
         rounds = 0
@@ -225,7 +225,7 @@ class Engine:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.spider.log.info(
-            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.spider.futures)},任务队列是否为空:{self.scheduler.empty()} ")
+            f"exc_type :{exc_type} exc_val :{exc_val} 任务池数量:{len(self.spider.futures)},调度器队列是否为空:{self.scheduler.empty()} ")
         if exc_tb:
             self.spider.log.warning(traceback.format_exc(exc_tb))
         self.spider.signal_manager.send("SPIDER_STOPPED")
