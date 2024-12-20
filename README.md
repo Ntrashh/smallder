@@ -80,6 +80,9 @@ if __name__ == "__main__":
 yinghui0214@163.com
 
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Ntrashh/smallder&type=Date)](https://star-history.com/#Ntrashh/smallder&Date)
 
 
 ##
