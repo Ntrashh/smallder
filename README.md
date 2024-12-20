@@ -1,5 +1,5 @@
 # Smaller 一个开箱即用的爬虫框架
-
+[![PyPI Downloads](https://static.pepy.tech/badge/smallder)](https://pepy.tech/projects/smallder)  [![PyPI Downloads](https://static.pepy.tech/badge/smallder/month)](https://pepy.tech/projects/smallder) [![PyPI Downloads](https://static.pepy.tech/badge/smallder/week)](https://pepy.tech/projects/smallder)
 
 ## 简介
 
