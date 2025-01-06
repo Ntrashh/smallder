@@ -1,37 +1,40 @@
-import threading
-from typing import Any, Dict
-from fastapi import FastAPI
-import uvicorn
-
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 from smallder.core.statscollectors import MemoryStatsCollector
+import uvicorn
+import threading
 
 
 class FastAPIWrapper:
     def __init__(self, host="0.0.0.0", port=8000, spider=None):
-        self.app = FastAPI()
+        # self.app = FastAPI()
+        self.app = Starlette(debug=True, routes=[
+            Route('/status', self.get_status, methods=["GET"]),
+            Route('/running', self.running, methods=["GET"]),
+        ])
         self.host = host
         self.port = port
         self._status = MemoryStatsCollector(spider)
-        # 将路由添加到FastAPI应用
-        self.app.add_api_route("/status", self.get_status, methods=["GET"])
-        self.app.add_api_route("/running", self.running, methods=["GET"])
 
-    def get_status(self):
+    async def get_status(self, request):
         # 调用启动爬虫的逻辑
-        return self.format_response(data=self._status.get_stats(), message="success")
+        return JSONResponse(
+            content={
+                "message": "success",
+                "data": self._status.get_stats()
+            }
+        )
 
-    def running(self):
-        return self.format_response(data="running", message="success")
-
-    @staticmethod
-    def format_response(data: Any, success: bool = True, message: str = "") -> Dict[str, Any]:
-        return {
-            "success": success,
-            "message": message,
-            "data": data
-        }
+    async def running(self, request):
+        return JSONResponse(
+            content={
+                "message": "success",
+                "data": "running"
+            }
+        )
 
     def run(self):
         threading.Thread(target=uvicorn.run, args=(self.app,),
-                         kwargs={'host': self.host, 'port': self.port, "log_level": "critical"},
+                         kwargs={'host': self.host, 'port': self.port,"log_level": "critical"},
                          daemon=True, ).start()

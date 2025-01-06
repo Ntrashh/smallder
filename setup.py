@@ -33,7 +33,6 @@ requires = [
     'click',
     'colorama',
     'exceptiongroup',
-    'fastapi',
     'greenlet',
     'h11',
     'idna',

@@ -72,9 +72,8 @@ class Spider:
     def start_requests(self):
         if not len(self.start_urls):
             raise AttributeError(
-                "Crawling could not start: 'start_urls' not found "
-                "or empty (but found 'start_url' attribute instead, "
-                "did you miss an 's'?)"
+                "Crawling could not start: The 'start_urls' attribute is empty. "
+                "Please provide a non-empty list of seed URLs to begin crawling."
             )
         for url in self.start_urls:
             yield Request(url=url)
