@@ -2,7 +2,7 @@ import json
 import queue
 import time
 import traceback
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 from requests import RequestException
 from smallder.core.error import RetryException, DiscardException
 from smallder.api.app import FastAPIWrapper
@@ -45,6 +45,7 @@ class Engine:
     def future_done(self, future):
         try:
             self.spider.futures.remove(future)
+            self.spider.signal_manager.send(signal_name="SPIDER_STATS", task_type=future.name)
         except ValueError as e:
             self.spider.log.warning(e)  # Future 已经被移除
 
@@ -163,12 +164,13 @@ class Engine:
                     if task is None:
                         time.sleep(0.01)
                         continue
-                    process_func = self.process_func(task)
+                    task_name = task.__class__.__name__
+                    process_func = self.process_func(task_name)
                     future = executor.submit(process_func, task)
+                    future.name = task_name
                     self.spider.futures.append(future)
                     future.add_done_callback(self.future_done)
                     rounds = 0
-                    self.spider.signal_manager.send(signal_name="SPIDER_STATS", task=task)
                 except Exception as e:
                     self.spider.log.exception(f"调度引擎出现错误 \n {e}")
 
@@ -194,24 +196,24 @@ class Engine:
                 if task is None:
                     time.sleep(0.1)
                     continue
-                process_func = self.process_func(task)
+                task_name = task.__class__.__name__
+                process_func = self.process_func(task_name)
                 process_func(task)
                 rounds = 0
             except Exception as e:
                 self.spider.log.exception(f"调度引擎出现错误 \n {e}")
         return self.spider
 
-    def process_func(self, task):
-        cls_name = type(task).__name__
+    def process_func(self, task_name):
         func_dict = {
             "Request": self.process_request,
             "Response": self.process_response,
             "dict": self.process_item,
             "Item": self.process_item,
         }
-        func = func_dict.get(cls_name)
+        func = func_dict.get(task_name)
         if func is None:
-            raise ValueError(f"{task} does not exist")
+            raise ValueError(f"{task_name} does not exist")
         return func
 
     def process_callback_error(self, e, request, response=None):

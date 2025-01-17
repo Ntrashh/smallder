@@ -14,15 +14,12 @@ class StatsCollector:
         self.start_period = time.time()
         self.spider = spider
 
-    def handler(self, task=None):
-        if task is not None:
-            cls_name = type(task).__name__.lower()
-            if cls_name == "response":
-                status_code_key = f"status_code_{task.status_code}"
-                self.inc_value(status_code_key)
-            if isinstance(task, str):
-                cls_name = task
+    def handler(self, task_type=None):
+        if task_type is not None and isinstance(task_type,str):
+            cls_name = task_type.lower()
             self.inc_value(cls_name)
+
+        # 输出日志
         if time.time() - self.start_period > 60:
             log_str = [f"任务池数量 : {len(self.spider.futures)}"]
             for key, value in self._cache_stats.items():
