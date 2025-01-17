@@ -14,19 +14,12 @@ class Downloader:
         self.spider = spider
 
     @classmethod
-    def fetch(cls, request: Request, retry_time: int = 3):
+    def fetch(cls, request: Request):
         """
-        @param retry_time:
         @type request: Request
         """
-        retries = Retry(
-            total=retry_time,
-            backoff_factor=0.1,
-        )
-        with requests.Session() as session:
-            session.mount('http://', HTTPAdapter(max_retries=retries))
-            session.mount('https://', HTTPAdapter(max_retries=retries))
 
+        with requests.Session() as session:
             with session.request(
                     method=request.method,
                     url=request.url,
@@ -39,7 +32,7 @@ class Downloader:
                     verify=request.verify,
                     allow_redirects=request.allow_redirects,  # 禁止重定向
             ) as response:
-                return Response(url=request.url, status_code=response.status_code, content=response.content,
+                return Response(url=request.full_url(), status_code=response.status_code, content=response.content,
                                 request=request,
                                 cookies=response.cookies.get_dict(), elapsed=response.elapsed)
 

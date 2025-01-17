@@ -24,7 +24,9 @@ class Response:
 
     def __init__(self, url=None, status_code=200, content=None, request=None, encoding="utf-8", cookies=None,
                  elapsed=0):
-        self.url = url
+        if request is None:
+            raise ValueError("Request cannot be None")
+        self.url = url or request.full_url()
         self.content = content
         self.request = request
         self.status_code = status_code

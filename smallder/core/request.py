@@ -115,6 +115,8 @@ class Request:
         返回url拼接params的完整字符串
         """
         params = self.params if self.params else ""
+        if not params or params is None:
+            return self.url
         parsed_url = urlparse(self.url)
         # 将参数字典转换为查询字符串
         query_string = urlencode(params, doseq=True)
