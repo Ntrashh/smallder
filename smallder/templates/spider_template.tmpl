@@ -3,7 +3,7 @@ from smallder import Spider, Request, Response
 
 class ${spider_class_name}(Spider):
     name = "${spider_name}"
-    fastapi = True  # 控制内部统计api的数据
+    fastapi = False  # 控制内部统计api的数据
     redis_task_key = ""  # 任务池key如果存在值,则直接从redis中去任务,需要重写make_request_for_redis
     start_urls = []
     max_retry: int = 10  # 重试次数
