@@ -1,6 +1,7 @@
+import copy
 import json
 from json import JSONDecodeError
-from urllib.parse import urljoin
+from urllib.parse import urljoin, parse_qsl, urlparse
 from lxml import etree
 
 import chardet
@@ -90,6 +91,16 @@ class Response:
         char_code = chardet.detect(self.content)
         encoding = char_code.get('encoding', 'utf-8')
         return encoding
+
+    def params(self):
+
+        if self.request.params:
+            return self.request.params
+        parsed_url = urlparse(self.url)
+        params_list = parse_qsl(parsed_url.query)
+        # 转换为字典
+        return dict(params_list)
+
 
     def urljoin(self, url):
 

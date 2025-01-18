@@ -70,6 +70,7 @@ class StatsCollector:
 
 @singleton
 class MemoryStatsCollector(StatsCollector):
+    spider_stats = {}
 
     def __init__(self, spider):
         super().__init__(spider)
