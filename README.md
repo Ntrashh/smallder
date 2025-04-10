@@ -1,26 +1,44 @@
-# Smaller 一个开箱即用的爬虫框架
+# Smallder - A Lightweight Web Crawling Framework
 [![PyPI Downloads](https://static.pepy.tech/badge/smallder)](https://pepy.tech/projects/smallder)  [![PyPI Downloads](https://static.pepy.tech/badge/smallder/month)](https://pepy.tech/projects/smallder) [![PyPI Downloads](https://static.pepy.tech/badge/smallder/week)](https://pepy.tech/projects/smallder)
 
-## 简介
+## Introduction
 
-Smaller 是一个开箱即用的轻量爬虫框架
+Smaller is a lightweight, easy-to-use web crawling framework designed for simplicity and efficiency. It provides a powerful yet straightforward approach to building web crawlers with features like:
 
-github地址 : https://github.com/Ntrashh/smallder
+- Asynchronous + multi-threaded architecture
+- Built-in middleware system
+- Redis integration for distributed crawling
+- MySQL integration for data storage
+- Customizable request and response handling
+- Real-time statistics and monitoring
+
+GitHub: https://github.com/Ntrashh/smallder
+
+## Documentation
+
+Detailed documentation is available in the `docs/` directory:
+
+- [Introduction and Overview](docs/README.md)
+- [Core Concepts](docs/core-concepts.md)
+- [Advanced Usage](docs/advanced-usage.md)
+- [API Reference](docs/api-reference.md)
+- [Examples](docs/examples.md)
 
 
 
-### 环境要求
- - Python 3.7.0+
- - Works on Linux, Windows, macOS
+## Requirements
+- Python 3.7.0+
+- Works on Linux, Windows, macOS
 
-### 安装
-```cmd
-pip3 install smallder
+## Installation
+```bash
+pip install smallder
 ```
 
-### 使用
-创建爬虫
-```shell
+## Quick Start
+
+Create a new spider:
+```bash
 smallder create -s demo_spider
 ```
 
@@ -69,15 +87,25 @@ if __name__ == "__main__":
 
 
 
-如果你在使用过程中对smallder有任何问题或建议可以联系我
+## Features
 
-微信:
+- **Simple API**: Easy to learn and use
+- **Asynchronous + Multi-threaded**: Efficient crawling with thread pool
+- **Middleware System**: Customize request/response processing
+- **Redis Integration**: Distributed crawling support
+- **MySQL Integration**: Built-in database storage
+- **Error Handling**: Automatic retry and error callbacks
+- **Monitoring**: Real-time statistics with FastAPI
 
+## Contact
+
+If you have any questions or suggestions about Smallder, please contact me:
+
+WeChat:
 
 ![wechat](https://user-images.githubusercontent.com/109586486/210029580-4bb2f7bb-ed19-4971-ad0a-788aa659e2ff.jpg)
 
-邮箱:
-yinghui0214@163.com
+Email: yinghui0214@163.com
 
 
 ## Star History
