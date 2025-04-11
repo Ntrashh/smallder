@@ -2,6 +2,8 @@
 
 This document provides detailed information about the classes and methods available in the Smallder framework.
 
+[切换到中文文档](api-reference_zh.md)
+
 ## Spider
 
 The base class for all spiders.

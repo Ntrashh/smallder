@@ -2,6 +2,8 @@
 
 This document explains the core concepts and components of the Smallder framework.
 
+[切换到中文文档](core-concepts_zh.md)
+
 ## Architecture Overview
 
 Smallder follows a modular architecture with several key components:
@@ -128,12 +130,12 @@ Middlewares process requests before they are sent and responses after they are r
 class MyMiddleware:
     def __init__(self, spider):
         self.spider = spider
-        
+
     def process_request(self, request):
         # Modify request
         request.headers["X-Custom"] = "Value"
         return request
-        
+
     def process_response(self, response):
         # Modify response
         return response

@@ -2,6 +2,8 @@
 
 This guide explains how to navigate and use the Smallder documentation effectively.
 
+[切换到中文文档](how-to-use-docs_zh.md)
+
 ## Documentation Structure
 
 The Smallder documentation is organized into several sections:

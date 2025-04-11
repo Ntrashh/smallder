@@ -2,6 +2,8 @@
 
 Welcome to the official documentation for Smallder, a lightweight, asynchronous web crawling framework.
 
+[切换到中文文档](README_zh.md)
+
 ## Table of Contents
 
 - [Introduction](#introduction)

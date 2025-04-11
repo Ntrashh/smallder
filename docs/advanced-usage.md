@@ -2,6 +2,8 @@
 
 This document covers advanced usage scenarios and features of the Smallder framework.
 
+[切换到中文文档](advanced-usage_zh.md)
+
 ## Distributed Crawling with Redis
 
 Smallder supports distributed crawling using Redis as a central task queue and duplicate filter.
@@ -12,7 +14,7 @@ Smallder supports distributed crawling using Redis as a central task queue and d
 class MyDistributedSpider(Spider):
     name = "distributed_spider"
     start_urls = ["https://example.com"]
-    
+
     # Redis configuration
     custom_settings = {
         "redis": "redis://username:password@localhost:6379/0"
@@ -27,11 +29,11 @@ You can use Redis as a source of tasks by setting the `redis_task_key` attribute
 class RedisSpider(Spider):
     name = "redis_spider"
     redis_task_key = "my_spider:tasks"
-    
+
     custom_settings = {
         "redis": "redis://localhost:6379/0"
     }
-    
+
     def make_request_for_redis(self, data):
         # Convert Redis data to Request objects
         url = data.decode('utf-8')
@@ -48,12 +50,12 @@ Smallder can integrate with MySQL for storing crawled data.
 class DatabaseSpider(Spider):
     name = "db_spider"
     start_urls = ["https://example.com"]
-    
+
     # MySQL configuration
     custom_settings = {
         "mysql": "mysql://username:password@localhost:3306/database_name"
     }
-    
+
     def pipline(self, item):
         # Store item in MySQL
         if self.mysql_server:
@@ -72,16 +74,16 @@ Smallder supports batch processing of items for more efficient database operatio
 class BatchSpider(Spider):
     name = "batch_spider"
     start_urls = ["https://example.com"]
-    
+
     # Enable batch processing
     pipline_mode = "list"
     pipline_batch = 100  # Process items in batches of 100
-    
+
     def pipline(self, items):
         # Process a batch of items
         if not items:
             return
-            
+
         if self.mysql_server:
             with self.mysql_server.connect() as connection:
                 connection.execute(
@@ -99,12 +101,12 @@ You can create custom middleware to process requests and responses.
 class CustomMiddleware:
     def __init__(self, spider):
         self.spider = spider
-    
+
     def process_request(self, request):
         # Add custom headers
         request.headers["X-Custom"] = "Value"
         return request
-    
+
     def process_response(self, response):
         # Log response status
         self.spider.log.info(f"Response status: {response.status_code}")
@@ -114,7 +116,7 @@ class CustomMiddleware:
 class MiddlewareSpider(Spider):
     name = "middleware_spider"
     start_urls = ["https://example.com"]
-    
+
     custom_settings = {
         "middleware_settings": {
             "middleware.custom.CustomMiddleware": 100,
@@ -133,15 +135,15 @@ from smallder.core.dupfilter import Filter
 class CustomFilter(Filter):
     def __init__(self):
         self.seen_urls = set()
-    
+
     def request_seen(self, request):
         # Only consider the URL path for duplicate detection
         from urllib.parse import urlparse
         url_path = urlparse(request.url).path
-        
+
         if url_path in self.seen_urls:
             return True
-        
+
         self.seen_urls.add(url_path)
         return False
 
@@ -149,7 +151,7 @@ class CustomFilter(Filter):
 class CustomFilterSpider(Spider):
     name = "custom_filter_spider"
     start_urls = ["https://example.com"]
-    
+
     custom_settings = {
         "dupfilter_class": "dupfilter.custom.CustomFilter",
     }
@@ -168,7 +170,7 @@ class PriorityScheduler(Scheduler):
     def __init__(self, spider, dup_filter):
         super().__init__(spider, dup_filter)
         self.queue = queue.PriorityQueue()
-    
+
     def next_job(self, block=False):
         try:
             _, job = self.queue.get(block=block)
@@ -176,15 +178,15 @@ class PriorityScheduler(Scheduler):
                 return job
         except queue.Empty:
             pass
-    
+
     def add_job(self, job, block=False):
         # Higher priority requests are processed first
         priority = getattr(job, 'priority', 0)
         self.queue.put((priority, job), block=block)
-    
+
     def size(self):
         return self.queue.qsize()
-    
+
     def empty(self):
         return self.queue.empty()
 
@@ -192,11 +194,11 @@ class PriorityScheduler(Scheduler):
 class PrioritySpider(Spider):
     name = "priority_spider"
     start_urls = ["https://example.com"]
-    
+
     custom_settings = {
         "scheduler_class": "scheduler.custom.PriorityScheduler",
     }
-    
+
     def parse(self, response):
         # High priority request
         yield Request(
@@ -204,7 +206,7 @@ class PrioritySpider(Spider):
             callback=self.parse_important,
             priority=1
         )
-        
+
         # Normal priority request
         yield Request(
             url="https://example.com/normal",
@@ -249,7 +251,7 @@ def start_requests(self):
       -H 'Accept: application/json' \
       --data-raw '{"query":"test"}'
     """
-    
+
     yield Request.from_curl(curl_cmd, callback=self.parse_api)
 ```
 
@@ -261,11 +263,11 @@ Smallder provides a signal system for hooking into various events:
 class SignalSpider(Spider):
     name = "signal_spider"
     start_urls = ["https://example.com"]
-    
+
     def __init__(self):
         # Register custom signal handler
         self.signal_manager.connect("SPIDER_STATS", self.handle_stats)
-    
+
     def handle_stats(self, **kwargs):
         self.log.info(f"Stats update: {kwargs}")
 ```
@@ -278,7 +280,7 @@ Smallder includes a built-in monitoring API powered by FastAPI:
 class MonitoredSpider(Spider):
     name = "monitored_spider"
     start_urls = ["https://example.com"]
-    
+
     # Enable FastAPI monitoring (enabled by default)
     fastapi = True
 ```
@@ -293,24 +295,24 @@ When the spider is running, you can access the monitoring API at http://localhos
 class ErrorHandlingSpider(Spider):
     name = "error_spider"
     start_urls = ["https://example.com"]
-    
+
     def start_requests(self):
         yield Request(
             url="https://example.com/might-fail",
             callback=self.parse,
             errback=self.handle_error
         )
-    
+
     def handle_error(self, failure):
         self.log.error(f"Request failed: {failure.request.url}")
         self.log.error(f"Exception: {failure.exception}")
-        
+
         # You can yield a new request or item here
         yield Request(
             url="https://example.com/backup",
             callback=self.parse
         )
-    
+
     def error_callback(self, failure):
         # Global error handler for all requests without specific errbacks
         self.log.error(f"Global error handler: {failure.exception}")
@@ -326,16 +328,16 @@ class RetrySpider(Spider):
     name = "retry_spider"
     start_urls = ["https://example.com"]
     max_retry = 5  # Maximum retry attempts
-    
+
     def parse(self, response):
         if response.status_code == 429:  # Too Many Requests
             # Force a retry
             raise RetryException("Rate limited, retrying...")
-        
+
         if response.status_code == 404:
             # Don't retry this request
             raise DiscardException("Page not found, skipping...")
-            
+
         # Process successful response
         yield {"url": response.url, "status": "success"}
 ```

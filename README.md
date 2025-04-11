@@ -18,11 +18,12 @@ GitHub: https://github.com/Ntrashh/smallder
 
 Detailed documentation is available in the `docs/` directory:
 
-- [Introduction and Overview](docs/README.md)
-- [Core Concepts](docs/core-concepts.md)
-- [Advanced Usage](docs/advanced-usage.md)
-- [API Reference](docs/api-reference.md)
-- [Examples](docs/examples.md)
+- [Introduction and Overview](docs/README.md) / [中文](docs/README_zh.md)
+- [Core Concepts](docs/core-concepts.md) / [中文](docs/core-concepts_zh.md)
+- [Advanced Usage](docs/advanced-usage.md) / [中文](docs/advanced-usage_zh.md)
+- [API Reference](docs/api-reference.md) / [中文](docs/api-reference_zh.md)
+- [Examples](docs/examples.md) / [中文](docs/examples_zh.md)
+- [How to Use Documentation](docs/how-to-use-docs.md) / [中文](docs/how-to-use-docs_zh.md)
 
 
 
