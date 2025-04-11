@@ -5,7 +5,7 @@
 
 Smaller is a lightweight, easy-to-use web crawling framework designed for simplicity and efficiency. It provides a powerful yet straightforward approach to building web crawlers with features like:
 
-- Asynchronous + multi-threaded architecture
+- Multi-threaded architecture
 - Built-in middleware system
 - Redis integration for distributed crawling
 - MySQL integration for data storage
